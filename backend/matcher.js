@@ -1,6 +1,10 @@
 const pool = require("./db");
 const stringSimilarity = require("string-similarity");
 
+const {
+    saveReconciliationResults
+} = require("./save-reconciliation");
+
 // ============================================================
 // ReconAI - Multi-Source Payment Reconciliation Engine
 // ============================================================
@@ -29,7 +33,9 @@ function normalizeReference(value) {
 }
 
 function normalizeAmount(value) {
-    return Number(Number(value).toFixed(2));
+    return Number(
+        Number(value).toFixed(2)
+    );
 }
 
 function amountDifference(a, b) {
@@ -44,7 +50,10 @@ function amountsMatch(
     b,
     tolerance = AMOUNT_TOLERANCE
 ) {
-    return amountDifference(a, b) <= tolerance;
+    return (
+        amountDifference(a, b) <=
+        tolerance
+    );
 }
 
 function daysBetween(dateA, dateB) {
@@ -66,12 +75,19 @@ function daysBetween(dateA, dateB) {
 // Reference similarity
 // ------------------------------------------------------------
 
-function referenceSimilarity(orderId, settlementRef) {
+function referenceSimilarity(
+    orderId,
+    settlementRef
+) {
     const orderRef =
-        normalizeReference(orderId);
+        normalizeReference(
+            orderId
+        );
 
     const settlementReference =
-        normalizeReference(settlementRef);
+        normalizeReference(
+            settlementRef
+        );
 
     if (
         !orderRef ||
@@ -86,13 +102,6 @@ function referenceSimilarity(orderId, settlementRef) {
     );
 }
 
-// Extract numeric part.
-//
-// ORD-1150      -> 1150
-// ORDX-1150     -> 1150
-// ORD-1150-X    -> 1150
-// ORD-1150_X    -> 1150
-//
 function referenceNumber(value) {
     const match =
         String(value || "").match(
@@ -112,7 +121,9 @@ function isControlledTypoReference(
         referenceNumber(orderId);
 
     const settlementNumber =
-        referenceNumber(settlementRef);
+        referenceNumber(
+            settlementRef
+        );
 
     if (
         !orderNumber ||
@@ -124,8 +135,12 @@ function isControlledTypoReference(
     return (
         orderNumber ===
         settlementNumber &&
-        normalizeReference(orderId) !==
-        normalizeReference(settlementRef)
+        normalizeReference(
+            orderId
+        ) !==
+        normalizeReference(
+            settlementRef
+        )
     );
 }
 
@@ -201,7 +216,6 @@ function findExactReferenceSettlements(
 
 // ------------------------------------------------------------
 // PASS 1
-//
 // Exact reference + amount + normal date
 // ------------------------------------------------------------
 
@@ -245,7 +259,8 @@ function findExactSettlement(
                 daysBetween(
                     order.order_date,
                     settlement.settlement_date
-                ) <= DATE_TOLERANCE_DAYS;
+                ) <=
+                DATE_TOLERANCE_DAYS;
 
             return (
                 sameReference &&
@@ -258,7 +273,6 @@ function findExactSettlement(
 
 // ------------------------------------------------------------
 // PASS 2
-//
 // Settlement net amount -> bank statement
 // ------------------------------------------------------------
 
@@ -291,14 +305,7 @@ function findBankEntry(
 
 // ------------------------------------------------------------
 // PASS 3
-//
-// Fuzzy reference matching.
-//
-// IMPORTANT:
-// - Same numeric order number is a strong signal.
-// - Amount must match.
-// - Settlement date must be reasonable.
-// - Exact references are preferred elsewhere.
+// Fuzzy reference matching
 // ------------------------------------------------------------
 
 function findFuzzySettlement(
@@ -369,7 +376,8 @@ function findFuzzySettlement(
 
         if (
             controlledTypo ||
-            similarity >= FUZZY_THRESHOLD
+            similarity >=
+            FUZZY_THRESHOLD
         ) {
             candidates.push({
                 settlement,
@@ -412,13 +420,6 @@ function findFuzzySettlement(
 
 // ------------------------------------------------------------
 // AMOUNT MISMATCH
-//
-// IMPORTANT:
-//
-// We look for an exact reference FIRST,
-// regardless of amount.
-//
-// This is the key fix.
 // ------------------------------------------------------------
 
 function findAmountMismatchSettlement(
@@ -473,9 +474,9 @@ function classifyUnmatchedOrder(
             settlements
         );
 
-    // No exact reference.
     if (
-        exactReferenceMatches.length === 0
+        exactReferenceMatches.length ===
+        0
     ) {
         return {
             category:
@@ -489,7 +490,6 @@ function classifyUnmatchedOrder(
         };
     }
 
-    // Exact reference exists but amount differs.
     const amountMismatch =
         exactReferenceMatches.some(
             settlement =>
@@ -527,8 +527,7 @@ function classifyUnmatchedOrder(
 
 // ------------------------------------------------------------
 // PASS 4
-//
-// Duplicate settlements.
+// Duplicate settlements
 // ------------------------------------------------------------
 
 function findDuplicateSettlements(
@@ -666,7 +665,6 @@ async function runReconciliation() {
 
         // ====================================================
         // PASS 1
-        // Exact matching
         // ====================================================
 
         for (
@@ -727,7 +725,6 @@ async function runReconciliation() {
 
         // ====================================================
         // PASS 2
-        // Bank verification
         // ====================================================
 
         for (
@@ -767,7 +764,8 @@ async function runReconciliation() {
                 result.status =
                     "EXCEPTION";
 
-                result.utr = null;
+                result.utr =
+                    null;
 
                 result.reason =
                     "Settlement was found, but no corresponding bank credit was found for the settled amount.";
@@ -810,9 +808,7 @@ async function runReconciliation() {
 
         // ====================================================
         // PASS 3A
-        //
-        // AMOUNT_MISMATCH must be checked BEFORE fuzzy
-        // matching.
+        // AMOUNT MISMATCH
         // ====================================================
 
         for (
@@ -879,7 +875,7 @@ async function runReconciliation() {
 
         // ====================================================
         // PASS 3B
-        // Fuzzy reference matching
+        // FUZZY
         // ====================================================
 
         for (
@@ -958,7 +954,7 @@ async function runReconciliation() {
 
         // ====================================================
         // PASS 5
-        // Remaining exceptions
+        // REMAINING EXCEPTIONS
         // ====================================================
 
         for (
@@ -1015,7 +1011,7 @@ async function runReconciliation() {
 
         // ====================================================
         // PASS 4
-        // Duplicate settlements
+        // DUPLICATES
         // ====================================================
 
         const duplicateResults =
@@ -1026,7 +1022,7 @@ async function runReconciliation() {
             );
 
         // ====================================================
-        // Results
+        // RESULTS
         // ====================================================
 
         const primaryArray =
@@ -1061,7 +1057,7 @@ async function runReconciliation() {
                     100;
 
         // ====================================================
-        // Category counts
+        // CATEGORY COUNTS
         // ====================================================
 
         const categoryCounts = {};
@@ -1093,7 +1089,7 @@ async function runReconciliation() {
         }
 
         // ====================================================
-        // Summary
+        // SUMMARY
         // ====================================================
 
         console.log(
@@ -1149,7 +1145,7 @@ async function runReconciliation() {
         console.log("");
 
         // ====================================================
-        // Duplicate output
+        // DUPLICATES
         // ====================================================
 
         console.log(
@@ -1172,7 +1168,7 @@ async function runReconciliation() {
         console.log("");
 
         // ====================================================
-        // Exception output
+        // EXCEPTIONS
         // ====================================================
 
         console.log(
@@ -1191,7 +1187,7 @@ async function runReconciliation() {
         console.log("");
 
         // ====================================================
-        // Category counts
+        // CATEGORY COUNTS
         // ====================================================
 
         console.log(
@@ -1214,7 +1210,7 @@ async function runReconciliation() {
         console.log("");
 
         // ====================================================
-        // Integrity
+        // INTEGRITY CHECK
         // ====================================================
 
         console.log(
@@ -1241,6 +1237,24 @@ async function runReconciliation() {
                 "❌ Integrity check failed."
             );
         }
+
+        console.log("");
+
+        // ====================================================
+        // AUDIT LOG
+        // ====================================================
+
+        console.log(
+            "--------------- AUDIT LOG ----------------"
+        );
+
+        await saveReconciliationResults(
+            primaryArray
+        );
+
+        console.log(
+            "✅ Reconciliation audit trail updated."
+        );
 
         console.log("");
 
