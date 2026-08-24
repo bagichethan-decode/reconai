@@ -15,7 +15,8 @@
     "csv-parse": "^7.0.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mysql2": "^3.23.4"
+    "mysql2": "^3.23.4",
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

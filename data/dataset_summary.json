@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-08-23T15:45:10.894Z",
+  "orders": 200,
+  "settlements": 201,
+  "bank_entries": 195,
+  "scenario_counts": {
+    "exact": 130,
+    "typo_ref": 20,
+    "date_delay": 15,
+    "rounding": 10,
+    "duplicate": 8,
+    "no_settlement": 7,
+    "no_bank": 6,
+    "amount_mismatch": 4
+  }
+}
