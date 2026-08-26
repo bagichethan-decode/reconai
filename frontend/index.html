@@ -59,10 +59,7 @@
         <section class="cards">
 
             <div class="card">
-                <span class="card-label">
-                    Orders
-                </span>
-
+                <span class="card-label">Orders</span>
                 <strong
                     id="ordersCount"
                     class="card-value"
@@ -72,10 +69,7 @@
             </div>
 
             <div class="card">
-                <span class="card-label">
-                    Settlements
-                </span>
-
+                <span class="card-label">Settlements</span>
                 <strong
                     id="settlementsCount"
                     class="card-value"
@@ -85,10 +79,7 @@
             </div>
 
             <div class="card">
-                <span class="card-label">
-                    Bank Entries
-                </span>
-
+                <span class="card-label">Bank Entries</span>
                 <strong
                     id="bankCount"
                     class="card-value"
@@ -98,10 +89,7 @@
             </div>
 
             <div class="card">
-                <span class="card-label">
-                    Exceptions
-                </span>
-
+                <span class="card-label">Exceptions</span>
                 <strong
                     id="exceptionsCount"
                     class="card-value danger"
@@ -111,10 +99,7 @@
             </div>
 
             <div class="card">
-                <span class="card-label">
-                    Match Rate
-                </span>
-
+                <span class="card-label">Match Rate</span>
                 <strong
                     id="matchRate"
                     class="card-value success"
@@ -128,17 +113,13 @@
         <section class="panel">
 
             <div class="panel-header">
-
                 <div>
-                    <h3>
-                        Exception Categories
-                    </h3>
+                    <h3>Exception Categories</h3>
 
                     <p>
                         Current reconciliation issues
                     </p>
                 </div>
-
             </div>
 
             <div
@@ -155,13 +136,11 @@
             <div class="panel-header">
 
                 <div>
-                    <h3>
-                        Recent Exceptions
-                    </h3>
+                    <h3>Recent Exceptions</h3>
 
                     <p>
-                        Click an order to inspect
-                        its reconciliation details.
+                        Search, filter and inspect
+                        reconciliation exceptions.
                     </p>
                 </div>
 
@@ -174,12 +153,80 @@
 
             </div>
 
+            <div class="filters">
+
+                <div class="filter-group">
+
+                    <label for="searchInput">
+                        Search Order
+                    </label>
+
+                    <input
+                        id="searchInput"
+                        type="text"
+                        placeholder="e.g. ORD-1005"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+                <div class="filter-group">
+
+                    <label for="categoryFilter">
+                        Category
+                    </label>
+
+                    <select
+                        id="categoryFilter"
+                    >
+                        <option value="ALL">
+                            All Categories
+                        </option>
+
+                        <option value="AMOUNT_MISMATCH">
+                            AMOUNT_MISMATCH
+                        </option>
+
+                        <option value="MISSING_BANK">
+                            MISSING_BANK
+                        </option>
+
+                        <option value="NO_SETTLEMENT">
+                            NO_SETTLEMENT
+                        </option>
+
+                        <option value="UNRESOLVED">
+                            UNRESOLVED
+                        </option>
+
+                        <option value="FUZZY_MATCH">
+                            FUZZY_MATCH
+                        </option>
+                    </select>
+
+                </div>
+
+                <button
+                    id="clearFiltersButton"
+                    class="secondary-button"
+                >
+                    Clear Filters
+                </button>
+
+            </div>
+
+            <div
+                id="filterSummary"
+                class="filter-summary"
+            >
+                Load exceptions to use filters.
+            </div>
+
             <div class="table-wrapper">
 
                 <table>
 
                     <thead>
-
                         <tr>
                             <th>Order</th>
                             <th>Category</th>
@@ -187,20 +234,17 @@
                             <th>Difference</th>
                             <th>Suggested Action</th>
                         </tr>
-
                     </thead>
 
                     <tbody id="exceptionsTable">
 
                         <tr>
-
                             <td
                                 colspan="5"
                                 class="empty-state"
                             >
                                 Click "Load Exceptions"
                             </td>
-
                         </tr>
 
                     </tbody>
@@ -211,10 +255,6 @@
 
         </section>
 
-        <!-- ==================================================
-             ORDER DETAILS
-        ================================================== -->
-
         <section
             id="orderDetailsPanel"
             class="panel details-panel hidden"
@@ -223,9 +263,7 @@
             <div class="panel-header">
 
                 <div>
-                    <h3>
-                        Order Details
-                    </h3>
+                    <h3>Order Details</h3>
 
                     <p id="detailsSubtitle">
                         Select an order to inspect.

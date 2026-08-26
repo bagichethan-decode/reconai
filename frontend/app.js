@@ -1,6 +1,8 @@
 const API_BASE =
     "http://localhost:3000";
 
+let allExceptions = [];
+
 // ============================================================
 // API
 // ============================================================
@@ -21,7 +23,7 @@ async function fetchJson(endpoint) {
 }
 
 // ============================================================
-// Utilities
+// UTILITIES
 // ============================================================
 
 function setText(id, value) {
@@ -35,26 +37,11 @@ function setText(id, value) {
 
 function escapeHtml(value) {
     return String(value ?? "")
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function formatAmount(value) {
@@ -152,7 +139,7 @@ async function loadSummary() {
 }
 
 // ============================================================
-// EXCEPTIONS
+// LOAD EXCEPTIONS
 // ============================================================
 
 async function loadExceptions() {
@@ -161,6 +148,112 @@ async function loadExceptions() {
             "/api/reconciliation/exceptions"
         );
 
+    allExceptions =
+        Array.isArray(result.data)
+            ? result.data
+            : [];
+
+    applyFilters();
+}
+
+// ============================================================
+// FILTERS
+// ============================================================
+
+function applyFilters() {
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
+
+    const categorySelect =
+        document.getElementById(
+            "categoryFilter"
+        );
+
+    const searchValue =
+        searchInput
+            .value
+            .trim()
+            .toUpperCase();
+
+    const selectedCategory =
+        categorySelect
+            .value
+            .trim()
+            .toUpperCase();
+
+    const filtered =
+        allExceptions.filter(
+            item => {
+
+                const orderId =
+                    String(
+                        item.order_id || ""
+                    )
+                        .trim()
+                        .toUpperCase();
+
+                const itemCategory =
+                    String(
+                        item.category || ""
+                    )
+                        .trim()
+                        .toUpperCase();
+
+                const orderMatches =
+                    searchValue === "" ||
+                    orderId.includes(
+                        searchValue
+                    );
+
+                const categoryMatches =
+                    selectedCategory === "ALL" ||
+                    itemCategory ===
+                    selectedCategory;
+
+                return (
+                    orderMatches &&
+                    categoryMatches
+                );
+            }
+        );
+
+    renderExceptions(
+        filtered
+    );
+
+    updateFilterSummary(
+        filtered.length
+    );
+}
+
+function updateFilterSummary(
+    filteredCount
+) {
+    const summary =
+        document.getElementById(
+            "filterSummary"
+        );
+
+    if (
+        allExceptions.length === 0
+    ) {
+        summary.textContent =
+            "No exceptions loaded.";
+
+        return;
+    }
+
+    summary.textContent =
+        `Showing ${filteredCount} of ${allExceptions.length} exceptions`;
+}
+
+// ============================================================
+// RENDER EXCEPTIONS
+// ============================================================
+
+function renderExceptions(rows) {
     const table =
         document.getElementById(
             "exceptionsTable"
@@ -168,9 +261,24 @@ async function loadExceptions() {
 
     table.innerHTML = "";
 
+    if (rows.length === 0) {
+        table.innerHTML = `
+            <tr>
+                <td
+                    colspan="5"
+                    class="empty-state"
+                >
+                    No exceptions match the current filters.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
     for (
         const item
-        of result.data
+        of rows
     ) {
         const row =
             document.createElement(
@@ -189,6 +297,7 @@ async function loadExceptions() {
         row.innerHTML = `
             <td>
                 <button
+                    type="button"
                     class="order-link"
                     data-order-id="${escapeHtml(
                         item.order_id
@@ -229,23 +338,6 @@ async function loadExceptions() {
         table.appendChild(
             row
         );
-    }
-
-    if (
-        result.data.length === 0
-    ) {
-        table.innerHTML = `
-            <tr>
-                <td
-                    colspan="5"
-                    class="empty-state"
-                >
-                    No exceptions found.
-                </td>
-            </tr>
-        `;
-
-        return;
     }
 
     document
@@ -411,7 +503,6 @@ async function loadOrderDetails(
             <div class="detail-grid">
 
                 <div class="detail-card">
-
                     <span class="detail-label">
                         Order ID
                     </span>
@@ -421,11 +512,9 @@ async function loadOrderDetails(
                             order.order_id
                         )}
                     </strong>
-
                 </div>
 
                 <div class="detail-card">
-
                     <span class="detail-label">
                         Customer
                     </span>
@@ -435,11 +524,9 @@ async function loadOrderDetails(
                             order.customer_name
                         )}
                     </strong>
-
                 </div>
 
                 <div class="detail-card">
-
                     <span class="detail-label">
                         Order Amount
                     </span>
@@ -449,11 +536,9 @@ async function loadOrderDetails(
                             order.amount
                         )}
                     </strong>
-
                 </div>
 
                 <div class="detail-card">
-
                     <span class="detail-label">
                         Order Date
                     </span>
@@ -463,11 +548,9 @@ async function loadOrderDetails(
                             order.order_date
                         )}
                     </strong>
-
                 </div>
 
                 <div class="detail-card">
-
                     <span class="detail-label">
                         Status
                     </span>
@@ -477,7 +560,6 @@ async function loadOrderDetails(
                             order.status
                         )}
                     </strong>
-
                 </div>
 
                 ${
@@ -519,8 +601,7 @@ async function loadOrderDetails(
 
                                 <strong>
                                     ${
-                                        reconciliation.difference_amount ===
-                                        null
+                                        reconciliation.difference_amount === null
                                             ? "-"
                                             :
                                             formatAmount(
@@ -646,12 +727,8 @@ async function loadOrderDetails(
                             </div>
 
                         </div>
-                      `
-                    : `
-                        <div class="detail-empty">
-                            No reconciliation record found.
-                        </div>
-                      `
+                    `
+                    : ""
             }
         `;
 
@@ -672,7 +749,7 @@ async function loadOrderDetails(
 }
 
 // ============================================================
-// Refresh
+// REFRESH
 // ============================================================
 
 async function refreshDashboard() {
@@ -693,7 +770,7 @@ async function refreshDashboard() {
 }
 
 // ============================================================
-// Events
+// EVENTS
 // ============================================================
 
 document
@@ -712,6 +789,7 @@ document
     .addEventListener(
         "click",
         async () => {
+
             try {
                 await loadExceptions();
 
@@ -727,11 +805,54 @@ document
 
 document
     .getElementById(
+        "searchInput"
+    )
+    .addEventListener(
+        "input",
+        applyFilters
+    );
+
+document
+    .getElementById(
+        "categoryFilter"
+    )
+    .addEventListener(
+        "change",
+        applyFilters
+    );
+
+document
+    .getElementById(
+        "clearFiltersButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            document
+                .getElementById(
+                    "searchInput"
+                )
+                .value = "";
+
+            document
+                .getElementById(
+                    "categoryFilter"
+                )
+                .value = "ALL";
+
+            applyFilters();
+        }
+    );
+
+document
+    .getElementById(
         "closeDetailsButton"
     )
     .addEventListener(
         "click",
         () => {
+
             document
                 .getElementById(
                     "orderDetailsPanel"
@@ -743,7 +864,7 @@ document
     );
 
 // ============================================================
-// Initial load
+// START
 // ============================================================
 
 refreshDashboard();
