@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ReconAI Finance Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="topbar">
+        <div>
+            <h1>ReconAI</h1>
+            <p>Payment Reconciliation Control Center</p>
+        </div>
+
+        <div class="status">
+            <span class="status-dot"></span>
+            API Connected
+        </div>
+    </header>
+
+    <main class="container">
+
+        <section class="hero">
+            <div>
+                <h2>Reconciliation Overview</h2>
+
+                <p>
+                    Monitor orders, settlements, bank entries,
+                    matches and exceptions from one place.
+                </p>
+            </div>
+
+            <button
+                id="refreshButton"
+                class="refresh-button"
+            >
+                Refresh
+            </button>
+        </section>
+
+        <section class="cards">
+
+            <div class="card">
+                <span class="card-label">
+                    Orders
+                </span>
+
+                <strong
+                    id="ordersCount"
+                    class="card-value"
+                >
+                    --
+                </strong>
+            </div>
+
+            <div class="card">
+                <span class="card-label">
+                    Settlements
+                </span>
+
+                <strong
+                    id="settlementsCount"
+                    class="card-value"
+                >
+                    --
+                </strong>
+            </div>
+
+            <div class="card">
+                <span class="card-label">
+                    Bank Entries
+                </span>
+
+                <strong
+                    id="bankCount"
+                    class="card-value"
+                >
+                    --
+                </strong>
+            </div>
+
+            <div class="card">
+                <span class="card-label">
+                    Exceptions
+                </span>
+
+                <strong
+                    id="exceptionsCount"
+                    class="card-value danger"
+                >
+                    --
+                </strong>
+            </div>
+
+            <div class="card">
+                <span class="card-label">
+                    Match Rate
+                </span>
+
+                <strong
+                    id="matchRate"
+                    class="card-value success"
+                >
+                    --
+                </strong>
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Exception Categories</h3>
+
+                    <p>
+                        Current reconciliation issues
+                    </p>
+                </div>
+            </div>
+
+            <div
+                id="categoryList"
+                class="category-list"
+            >
+                Loading...
+            </div>
+
+        </section>
+
+        <section class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3>Recent Exceptions</h3>
+
+                    <p>
+                        Latest items requiring attention
+                    </p>
+                </div>
+
+                <button
+                    id="loadExceptionsButton"
+                    class="secondary-button"
+                >
+                    Load Exceptions
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Category</th>
+                            <th>Confidence</th>
+                            <th>Difference</th>
+                            <th>Suggested Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="exceptionsTable">
+                        <tr>
+                            <td
+                                colspan="5"
+                                class="empty-state"
+                            >
+                                Click "Load Exceptions"
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        ReconAI • Finance Reconciliation Platform
+    </footer>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
