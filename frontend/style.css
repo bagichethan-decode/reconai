@@ -664,3 +664,8 @@ footer {
     background: #dcfce7;
     color: #166534;
 }
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

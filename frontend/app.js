@@ -4,18 +4,30 @@ const PAGE_SIZE = 10;
 let allExceptions = [];
 let currentPage = 1;
 
+// ============================================================
+// API
+// ============================================================
+
 async function fetchJson(endpoint) {
-    const response = await fetch(`${API_BASE}${endpoint}`);
+    const response =
+        await fetch(`${API_BASE}${endpoint}`);
 
     if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+        throw new Error(
+            `API request failed: ${response.status}`
+        );
     }
 
     return response.json();
 }
 
+// ============================================================
+// UTILITIES
+// ============================================================
+
 function setText(id, value) {
-    const element = document.getElementById(id);
+    const element =
+        document.getElementById(id);
 
     if (element) {
         element.textContent = value;
@@ -51,19 +63,9 @@ function formatDate(value) {
     return new Date(value).toLocaleDateString();
 }
 
-function getPriority(category) {
-    const priorityMap = {
-        AMOUNT_MISMATCH: 1,
-        MISSING_BANK: 1,
-        NO_SETTLEMENT: 2,
-        UNRESOLVED: 2,
-        FUZZY_MATCH: 3
-    };
-
-    return priorityMap[
-        String(category || "").toUpperCase()
-    ] || 99;
-}
+// ============================================================
+// SEVERITY
+// ============================================================
 
 function getSeverity(category) {
     const normalized =
@@ -90,28 +92,78 @@ function getSeverity(category) {
     return "MEDIUM";
 }
 
+function getPriority(category) {
+    const priorityMap = {
+        AMOUNT_MISMATCH: 1,
+        MISSING_BANK: 2,
+        NO_SETTLEMENT: 3,
+        UNRESOLVED: 4,
+        FUZZY_MATCH: 5
+    };
+
+    return (
+        priorityMap[
+            String(category || "").toUpperCase()
+        ] || 99
+    );
+}
+
+// ============================================================
+// SUMMARY
+// ============================================================
+
 async function loadSummary() {
     const result =
-        await fetchJson("/api/reconciliation/summary");
+        await fetchJson(
+            "/api/reconciliation/summary"
+        );
 
-    const summary = result.summary;
+    const summary =
+        result.summary;
 
-    setText("ordersCount", summary.orders);
-    setText("settlementsCount", summary.settlements);
-    setText("bankCount", summary.bank_entries);
-    setText("exceptionsCount", summary.exceptions);
-    setText("matchRate", `${summary.match_rate}%`);
+    setText(
+        "ordersCount",
+        summary.orders
+    );
+
+    setText(
+        "settlementsCount",
+        summary.settlements
+    );
+
+    setText(
+        "bankCount",
+        summary.bank_entries
+    );
+
+    setText(
+        "exceptionsCount",
+        summary.exceptions
+    );
+
+    setText(
+        "matchRate",
+        `${summary.match_rate}%`
+    );
 
     const categoryList =
-        document.getElementById("categoryList");
+        document.getElementById(
+            "categoryList"
+        );
 
     categoryList.innerHTML = "";
 
-    for (const item of result.categories) {
+    for (
+        const item
+        of result.categories
+    ) {
         const element =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
-        element.className = "category-item";
+        element.className =
+            "category-item";
 
         element.innerHTML = `
             <div class="category-name">
@@ -123,9 +175,15 @@ async function loadSummary() {
             </div>
         `;
 
-        categoryList.appendChild(element);
+        categoryList.appendChild(
+            element
+        );
     }
 }
+
+// ============================================================
+// LOAD EXCEPTIONS
+// ============================================================
 
 async function loadExceptions() {
     const result =
@@ -143,105 +201,162 @@ async function loadExceptions() {
     applyFilters();
 }
 
+// ============================================================
+// FILTER + SORT
+// ============================================================
+
 function getFilteredExceptions() {
     const searchValue =
         document
-            .getElementById("searchInput")
+            .getElementById(
+                "searchInput"
+            )
             .value
             .trim()
             .toUpperCase();
 
     const selectedCategory =
         document
-            .getElementById("categoryFilter")
+            .getElementById(
+                "categoryFilter"
+            )
             .value
             .trim()
             .toUpperCase();
 
     const selectedSort =
         document
-            .getElementById("sortFilter")
+            .getElementById(
+                "sortFilter"
+            )
             .value;
 
     let filtered =
-        allExceptions.filter(item => {
-            const orderId =
-                String(item.order_id || "")
-                    .trim()
-                    .toUpperCase();
+        allExceptions.filter(
+            item => {
 
-            const category =
-                String(item.category || "")
-                    .trim()
-                    .toUpperCase();
+                const orderId =
+                    String(
+                        item.order_id || ""
+                    )
+                        .trim()
+                        .toUpperCase();
 
-            const orderMatches =
-                searchValue === "" ||
-                orderId.includes(searchValue);
+                const category =
+                    String(
+                        item.category || ""
+                    )
+                        .trim()
+                        .toUpperCase();
 
-            const categoryMatches =
-                selectedCategory === "ALL" ||
-                category === selectedCategory;
+                const orderMatches =
+                    searchValue === "" ||
+                    orderId.includes(
+                        searchValue
+                    );
 
-            return (
-                orderMatches &&
-                categoryMatches
-            );
-        });
+                const categoryMatches =
+                    selectedCategory === "ALL" ||
+                    category ===
+                    selectedCategory;
 
-    filtered = sortExceptions(
+                return (
+                    orderMatches &&
+                    categoryMatches
+                );
+            }
+        );
+
+    return sortExceptions(
         filtered,
         selectedSort
     );
-
-    return filtered;
 }
 
-function sortExceptions(rows, sortType) {
+function sortExceptions(
+    rows,
+    sortType
+) {
     const sorted = [...rows];
 
-    if (sortType === "DIFFERENCE_DESC") {
-        sorted.sort((a, b) => {
-            const aValue =
-                Number(a.difference_amount) || 0;
+    if (
+        sortType ===
+        "DIFFERENCE_DESC"
+    ) {
+        sorted.sort(
+            (a, b) => {
 
-            const bValue =
-                Number(b.difference_amount) || 0;
+                const aValue =
+                    Number(
+                        a.difference_amount
+                    ) || 0;
 
-            return bValue - aValue;
-        });
+                const bValue =
+                    Number(
+                        b.difference_amount
+                    ) || 0;
+
+                return (
+                    bValue -
+                    aValue
+                );
+            }
+        );
 
         return sorted;
     }
 
-    if (sortType === "ORDER_ASC") {
-        sorted.sort((a, b) =>
-            String(a.order_id || "")
-                .localeCompare(
-                    String(b.order_id || "")
+    if (
+        sortType ===
+        "ORDER_ASC"
+    ) {
+        sorted.sort(
+            (a, b) =>
+                String(
+                    a.order_id || ""
+                ).localeCompare(
+                    String(
+                        b.order_id || ""
+                    )
                 )
         );
 
         return sorted;
     }
 
-    sorted.sort((a, b) => {
-        const priorityDifference =
-            getPriority(a.category) -
-            getPriority(b.category);
+    sorted.sort(
+        (a, b) => {
 
-        if (priorityDifference !== 0) {
-            return priorityDifference;
+            const priorityDifference =
+                getPriority(
+                    a.category
+                ) -
+                getPriority(
+                    b.category
+                );
+
+            if (
+                priorityDifference !== 0
+            ) {
+                return priorityDifference;
+            }
+
+            const aDifference =
+                Number(
+                    a.difference_amount
+                ) || 0;
+
+            const bDifference =
+                Number(
+                    b.difference_amount
+                ) || 0;
+
+            return (
+                bDifference -
+                aDifference
+            );
         }
-
-        const aDifference =
-            Number(a.difference_amount) || 0;
-
-        const bDifference =
-            Number(b.difference_amount) || 0;
-
-        return bDifference - aDifference;
-    });
+    );
 
     return sorted;
 }
@@ -254,15 +369,22 @@ function applyFilters() {
         Math.max(
             1,
             Math.ceil(
-                filtered.length / PAGE_SIZE
+                filtered.length /
+                PAGE_SIZE
             )
         );
 
-    if (currentPage > totalPages) {
-        currentPage = totalPages;
+    if (
+        currentPage >
+        totalPages
+    ) {
+        currentPage =
+            totalPages;
     }
 
-    renderExceptions(filtered);
+    renderExceptions(
+        filtered
+    );
 
     updateFilterSummary(
         filtered.length
@@ -273,13 +395,17 @@ function applyFilters() {
     );
 }
 
-function updateFilterSummary(filteredCount) {
+function updateFilterSummary(
+    filteredCount
+) {
     const summary =
         document.getElementById(
             "filterSummary"
         );
 
-    if (allExceptions.length === 0) {
+    if (
+        allExceptions.length === 0
+    ) {
         summary.textContent =
             "No exceptions loaded.";
 
@@ -290,7 +416,13 @@ function updateFilterSummary(filteredCount) {
         `Showing ${filteredCount} of ${allExceptions.length} exceptions`;
 }
 
-function updatePagination(totalItems) {
+// ============================================================
+// PAGINATION
+// ============================================================
+
+function updatePagination(
+    totalItems
+) {
     const pagination =
         document.getElementById(
             "pagination"
@@ -311,14 +443,20 @@ function updatePagination(totalItems) {
             "pageInfo"
         );
 
-    if (totalItems <= PAGE_SIZE) {
-        pagination.classList.add("hidden");
+    if (
+        totalItems <= PAGE_SIZE
+    ) {
+        pagination.classList.add(
+            "hidden"
+        );
+
         return;
     }
 
     const totalPages =
         Math.ceil(
-            totalItems / PAGE_SIZE
+            totalItems /
+            PAGE_SIZE
         );
 
     pagination.classList.remove(
@@ -335,7 +473,13 @@ function updatePagination(totalItems) {
         currentPage === totalPages;
 }
 
-function renderExceptions(filteredRows) {
+// ============================================================
+// RENDER EXCEPTIONS
+// ============================================================
+
+function renderExceptions(
+    filteredRows
+) {
     const table =
         document.getElementById(
             "exceptionsTable"
@@ -343,7 +487,9 @@ function renderExceptions(filteredRows) {
 
     table.innerHTML = "";
 
-    if (filteredRows.length === 0) {
+    if (
+        filteredRows.length === 0
+    ) {
         table.innerHTML = `
             <tr>
                 <td
@@ -359,10 +505,14 @@ function renderExceptions(filteredRows) {
     }
 
     const startIndex =
-        (currentPage - 1) * PAGE_SIZE;
+        (
+            currentPage - 1
+        ) *
+        PAGE_SIZE;
 
     const endIndex =
-        startIndex + PAGE_SIZE;
+        startIndex +
+        PAGE_SIZE;
 
     const pageRows =
         filteredRows.slice(
@@ -370,19 +520,28 @@ function renderExceptions(filteredRows) {
             endIndex
         );
 
-    for (const item of pageRows) {
+    for (
+        const item
+        of pageRows
+    ) {
         const row =
-            document.createElement("tr");
+            document.createElement(
+                "tr"
+            );
 
         const difference =
-            item.difference_amount === null
+            item.difference_amount ===
+            null
                 ? "-"
-                : Number(
+                :
+                Number(
                     item.difference_amount
                 ).toFixed(2);
 
         const severity =
-            getSeverity(item.category);
+            getSeverity(
+                item.category
+            );
 
         row.innerHTML = `
             <td>
@@ -427,29 +586,156 @@ function renderExceptions(filteredRows) {
 
             <td class="action-text">
                 ${escapeHtml(
-                    item.suggested_action || "-"
+                    item.suggested_action ||
+                    "-"
                 )}
             </td>
         `;
 
-        table.appendChild(row);
+        table.appendChild(
+            row
+        );
     }
 
     document
-        .querySelectorAll(".order-link")
+        .querySelectorAll(
+            ".order-link"
+        )
         .forEach(button => {
+
             button.addEventListener(
                 "click",
                 () => {
+
                     loadOrderDetails(
                         button.dataset.orderId
                     );
+
                 }
             );
+
         });
 }
 
-async function loadOrderDetails(orderId) {
+// ============================================================
+// CSV EXPORT
+// ============================================================
+
+function csvEscape(value) {
+    return `"${String(
+        value ?? ""
+    ).replace(
+        /"/g,
+        '""'
+    )}"`;
+}
+
+function exportExceptionsCsv() {
+    const rows =
+        getFilteredExceptions();
+
+    if (
+        rows.length === 0
+    ) {
+        alert(
+            "There are no exceptions to export."
+        );
+
+        return;
+    }
+
+    const headers = [
+        "Order ID",
+        "Category",
+        "Severity",
+        "Confidence",
+        "Difference",
+        "Suggested Action",
+        "Explanation"
+    ];
+
+    const csvRows = [
+        headers.map(
+            csvEscape
+        ).join(",")
+    ];
+
+    for (
+        const item
+        of rows
+    ) {
+        csvRows.push(
+            [
+                item.order_id,
+                item.category,
+                getSeverity(
+                    item.category
+                ),
+                item.confidence,
+                item.difference_amount ??
+                    "",
+                item.suggested_action ??
+                    "",
+                item.ai_explanation ??
+                    ""
+            ]
+                .map(
+                    csvEscape
+                )
+                .join(",")
+        );
+    }
+
+    const csv =
+        "\uFEFF" +
+        csvRows.join(
+            "\r\n"
+        );
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+    link.href = url;
+
+    link.download =
+        "reconai-exceptions.csv";
+
+    document.body.appendChild(
+        link
+    );
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(
+        url
+    );
+}
+
+// ============================================================
+// ORDER DETAILS
+// ============================================================
+
+async function loadOrderDetails(
+    orderId
+) {
     const panel =
         document.getElementById(
             "orderDetailsPanel"
@@ -465,11 +751,15 @@ async function loadOrderDetails(orderId) {
             "detailsSubtitle"
         );
 
-    panel.classList.remove("hidden");
+    panel.classList.remove(
+        "hidden"
+    );
 
     details.innerHTML = `
         <div class="loading">
-            Loading ${escapeHtml(orderId)}...
+            Loading ${escapeHtml(
+                orderId
+            )}...
         </div>
     `;
 
@@ -484,8 +774,12 @@ async function loadOrderDetails(orderId) {
                 )}`
             );
 
-        const order = result.order;
-        const settlements = result.settlements || [];
+        const order =
+            result.order;
+
+        const settlements =
+            result.settlements || [];
+
         const reconciliation =
             result.reconciliation;
 
@@ -647,6 +941,7 @@ async function loadOrderDetails(orderId) {
                     reconciliation
                         ? `
                             <div class="detail-card">
+
                                 <span class="detail-label">
                                     Category
                                 </span>
@@ -656,9 +951,11 @@ async function loadOrderDetails(orderId) {
                                         reconciliation.category
                                     )}
                                 </strong>
+
                             </div>
 
                             <div class="detail-card">
+
                                 <span class="detail-label">
                                     Confidence
                                 </span>
@@ -668,16 +965,19 @@ async function loadOrderDetails(orderId) {
                                         reconciliation.confidence
                                     )}
                                 </strong>
+
                             </div>
 
                             <div class="detail-card">
+
                                 <span class="detail-label">
                                     Difference
                                 </span>
 
                                 <strong>
                                     ${
-                                        reconciliation.difference_amount === null
+                                        reconciliation.difference_amount ===
+                                        null
                                             ? "-"
                                             :
                                             formatAmount(
@@ -685,6 +985,7 @@ async function loadOrderDetails(orderId) {
                                             )
                                     }
                                 </strong>
+
                             </div>
                           `
                         : ""
@@ -823,6 +1124,10 @@ async function loadOrderDetails(orderId) {
     }
 }
 
+// ============================================================
+// REFRESH
+// ============================================================
+
 async function refreshDashboard() {
     try {
         await loadSummary();
@@ -840,21 +1145,32 @@ async function refreshDashboard() {
     }
 }
 
+// ============================================================
+// EVENTS
+// ============================================================
+
 document
-    .getElementById("refreshButton")
+    .getElementById(
+        "refreshButton"
+    )
     .addEventListener(
         "click",
         refreshDashboard
     );
 
 document
-    .getElementById("loadExceptionsButton")
+    .getElementById(
+        "loadExceptionsButton"
+    )
     .addEventListener(
         "click",
         async () => {
+
             try {
                 await loadExceptions();
+
             } catch (error) {
+
                 console.error(error);
 
                 alert(
@@ -865,40 +1181,64 @@ document
     );
 
 document
-    .getElementById("searchInput")
+    .getElementById(
+        "exportCsvButton"
+    )
+    .addEventListener(
+        "click",
+        exportExceptionsCsv
+    );
+
+document
+    .getElementById(
+        "searchInput"
+    )
     .addEventListener(
         "input",
         () => {
+
             currentPage = 1;
+
             applyFilters();
         }
     );
 
 document
-    .getElementById("categoryFilter")
+    .getElementById(
+        "categoryFilter"
+    )
     .addEventListener(
         "change",
         () => {
+
             currentPage = 1;
+
             applyFilters();
         }
     );
 
 document
-    .getElementById("sortFilter")
+    .getElementById(
+        "sortFilter"
+    )
     .addEventListener(
         "change",
         () => {
+
             currentPage = 1;
+
             applyFilters();
         }
     );
 
 document
-    .getElementById("clearFiltersButton")
+    .getElementById(
+        "clearFiltersButton"
+    )
     .addEventListener(
         "click",
         () => {
+
             document
                 .getElementById(
                     "searchInput"
@@ -924,22 +1264,31 @@ document
     );
 
 document
-    .getElementById("previousPageButton")
+    .getElementById(
+        "previousPageButton"
+    )
     .addEventListener(
         "click",
         () => {
-            if (currentPage > 1) {
+
+            if (
+                currentPage > 1
+            ) {
                 currentPage--;
+
                 applyFilters();
             }
         }
     );
 
 document
-    .getElementById("nextPageButton")
+    .getElementById(
+        "nextPageButton"
+    )
     .addEventListener(
         "click",
         () => {
+
             const filtered =
                 getFilteredExceptions();
 
@@ -954,16 +1303,20 @@ document
                 totalPages
             ) {
                 currentPage++;
+
                 applyFilters();
             }
         }
     );
 
 document
-    .getElementById("closeDetailsButton")
+    .getElementById(
+        "closeDetailsButton"
+    )
     .addEventListener(
         "click",
         () => {
+
             document
                 .getElementById(
                     "orderDetailsPanel"
@@ -973,5 +1326,9 @@ document
                 );
         }
     );
+
+// ============================================================
+// START
+// ============================================================
 
 refreshDashboard();
