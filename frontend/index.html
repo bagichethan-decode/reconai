@@ -37,9 +37,7 @@
         <section class="hero">
 
             <div>
-                <h2>
-                    Reconciliation Overview
-                </h2>
+                <h2>Reconciliation Overview</h2>
 
                 <p>
                     Monitor orders, settlements,
@@ -113,6 +111,7 @@
         <section class="panel">
 
             <div class="panel-header">
+
                 <div>
                     <h3>Exception Categories</h3>
 
@@ -120,6 +119,7 @@
                         Current reconciliation issues
                     </p>
                 </div>
+
             </div>
 
             <div
@@ -176,9 +176,8 @@
                         Category
                     </label>
 
-                    <select
-                        id="categoryFilter"
-                    >
+                    <select id="categoryFilter">
+
                         <option value="ALL">
                             All Categories
                         </option>
@@ -202,6 +201,7 @@
                         <option value="FUZZY_MATCH">
                             FUZZY_MATCH
                         </option>
+
                     </select>
 
                 </div>
@@ -227,6 +227,7 @@
                 <table>
 
                     <thead>
+
                         <tr>
                             <th>Order</th>
                             <th>Category</th>
@@ -234,22 +235,53 @@
                             <th>Difference</th>
                             <th>Suggested Action</th>
                         </tr>
+
                     </thead>
 
                     <tbody id="exceptionsTable">
 
                         <tr>
+
                             <td
                                 colspan="5"
                                 class="empty-state"
                             >
                                 Click "Load Exceptions"
                             </td>
+
                         </tr>
 
                     </tbody>
 
                 </table>
+
+            </div>
+
+            <div
+                id="pagination"
+                class="pagination hidden"
+            >
+
+                <button
+                    id="previousPageButton"
+                    class="secondary-button"
+                >
+                    Previous
+                </button>
+
+                <span
+                    id="pageInfo"
+                    class="page-info"
+                >
+                    Page 1 of 1
+                </span>
+
+                <button
+                    id="nextPageButton"
+                    class="secondary-button"
+                >
+                    Next
+                </button>
 
             </div>
 
