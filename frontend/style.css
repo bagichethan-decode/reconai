@@ -641,3 +641,26 @@ footer {
         gap: 10px;
     }
 }
+.severity-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.severity-high {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.severity-medium {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.severity-low {
+    background: #dcfce7;
+    color: #166534;
+}

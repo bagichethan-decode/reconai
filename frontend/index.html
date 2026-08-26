@@ -15,318 +15,348 @@
 
 <body>
 
-    <header class="topbar">
+<header class="topbar">
+
+    <div>
+        <h1>ReconAI</h1>
+
+        <p>
+            Payment Reconciliation Control Center
+        </p>
+    </div>
+
+    <div class="status">
+        <span class="status-dot"></span>
+        API Connected
+    </div>
+
+</header>
+
+<main class="container">
+
+    <section class="hero">
 
         <div>
-            <h1>ReconAI</h1>
+            <h2>Reconciliation Overview</h2>
 
             <p>
-                Payment Reconciliation Control Center
+                Monitor orders, settlements,
+                bank entries and exceptions.
             </p>
         </div>
 
-        <div class="status">
-            <span class="status-dot"></span>
-            API Connected
+        <button
+            id="refreshButton"
+            class="refresh-button"
+        >
+            Refresh
+        </button>
+
+    </section>
+
+    <section class="cards">
+
+        <div class="card">
+            <span class="card-label">Orders</span>
+
+            <strong
+                id="ordersCount"
+                class="card-value"
+            >
+                --
+            </strong>
         </div>
 
-    </header>
+        <div class="card">
+            <span class="card-label">Settlements</span>
 
-    <main class="container">
+            <strong
+                id="settlementsCount"
+                class="card-value"
+            >
+                --
+            </strong>
+        </div>
 
-        <section class="hero">
+        <div class="card">
+            <span class="card-label">Bank Entries</span>
+
+            <strong
+                id="bankCount"
+                class="card-value"
+            >
+                --
+            </strong>
+        </div>
+
+        <div class="card">
+            <span class="card-label">Exceptions</span>
+
+            <strong
+                id="exceptionsCount"
+                class="card-value danger"
+            >
+                --
+            </strong>
+        </div>
+
+        <div class="card">
+            <span class="card-label">Match Rate</span>
+
+            <strong
+                id="matchRate"
+                class="card-value success"
+            >
+                --
+            </strong>
+        </div>
+
+    </section>
+
+    <section class="panel">
+
+        <div class="panel-header">
 
             <div>
-                <h2>Reconciliation Overview</h2>
+                <h3>Exception Categories</h3>
 
                 <p>
-                    Monitor orders, settlements,
-                    bank entries and exceptions.
+                    Current reconciliation issues
+                </p>
+            </div>
+
+        </div>
+
+        <div
+            id="categoryList"
+            class="category-list"
+        >
+            Loading...
+        </div>
+
+    </section>
+
+    <section class="panel">
+
+        <div class="panel-header">
+
+            <div>
+                <h3>Recent Exceptions</h3>
+
+                <p>
+                    Search, filter, sort and inspect
+                    reconciliation exceptions.
                 </p>
             </div>
 
             <button
-                id="refreshButton"
-                class="refresh-button"
+                id="loadExceptionsButton"
+                class="secondary-button"
             >
-                Refresh
+                Load Exceptions
             </button>
 
-        </section>
+        </div>
 
-        <section class="cards">
+        <div class="filters">
 
-            <div class="card">
-                <span class="card-label">Orders</span>
-                <strong
-                    id="ordersCount"
-                    class="card-value"
+            <div class="filter-group">
+
+                <label for="searchInput">
+                    Search Order
+                </label>
+
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="e.g. ORD-1005"
+                    autocomplete="off"
                 >
-                    --
-                </strong>
-            </div>
-
-            <div class="card">
-                <span class="card-label">Settlements</span>
-                <strong
-                    id="settlementsCount"
-                    class="card-value"
-                >
-                    --
-                </strong>
-            </div>
-
-            <div class="card">
-                <span class="card-label">Bank Entries</span>
-                <strong
-                    id="bankCount"
-                    class="card-value"
-                >
-                    --
-                </strong>
-            </div>
-
-            <div class="card">
-                <span class="card-label">Exceptions</span>
-                <strong
-                    id="exceptionsCount"
-                    class="card-value danger"
-                >
-                    --
-                </strong>
-            </div>
-
-            <div class="card">
-                <span class="card-label">Match Rate</span>
-                <strong
-                    id="matchRate"
-                    class="card-value success"
-                >
-                    --
-                </strong>
-            </div>
-
-        </section>
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <div>
-                    <h3>Exception Categories</h3>
-
-                    <p>
-                        Current reconciliation issues
-                    </p>
-                </div>
 
             </div>
 
-            <div
-                id="categoryList"
-                class="category-list"
+            <div class="filter-group">
+
+                <label for="categoryFilter">
+                    Category
+                </label>
+
+                <select id="categoryFilter">
+
+                    <option value="ALL">
+                        All Categories
+                    </option>
+
+                    <option value="AMOUNT_MISMATCH">
+                        AMOUNT_MISMATCH
+                    </option>
+
+                    <option value="MISSING_BANK">
+                        MISSING_BANK
+                    </option>
+
+                    <option value="NO_SETTLEMENT">
+                        NO_SETTLEMENT
+                    </option>
+
+                    <option value="UNRESOLVED">
+                        UNRESOLVED
+                    </option>
+
+                    <option value="FUZZY_MATCH">
+                        FUZZY_MATCH
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="filter-group">
+
+                <label for="sortFilter">
+                    Sort By
+                </label>
+
+                <select id="sortFilter">
+
+                    <option value="PRIORITY">
+                        Priority
+                    </option>
+
+                    <option value="DIFFERENCE_DESC">
+                        Difference: High to Low
+                    </option>
+
+                    <option value="ORDER_ASC">
+                        Order ID: A-Z
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button
+                id="clearFiltersButton"
+                class="secondary-button"
             >
-                Loading...
-            </div>
+                Clear Filters
+            </button>
 
-        </section>
+        </div>
 
-        <section class="panel">
+        <div
+            id="filterSummary"
+            class="filter-summary"
+        >
+            Load exceptions to use filters.
+        </div>
 
-            <div class="panel-header">
+        <div class="table-wrapper">
 
-                <div>
-                    <h3>Recent Exceptions</h3>
+            <table>
 
-                    <p>
-                        Search, filter and inspect
-                        reconciliation exceptions.
-                    </p>
-                </div>
+                <thead>
 
-                <button
-                    id="loadExceptionsButton"
-                    class="secondary-button"
-                >
-                    Load Exceptions
-                </button>
+                    <tr>
+                        <th>Order</th>
+                        <th>Category</th>
+                        <th>Severity</th>
+                        <th>Confidence</th>
+                        <th>Difference</th>
+                        <th>Suggested Action</th>
+                    </tr>
 
-            </div>
+                </thead>
 
-            <div class="filters">
+                <tbody id="exceptionsTable">
 
-                <div class="filter-group">
+                    <tr>
 
-                    <label for="searchInput">
-                        Search Order
-                    </label>
+                        <td
+                            colspan="6"
+                            class="empty-state"
+                        >
+                            Click "Load Exceptions"
+                        </td>
 
-                    <input
-                        id="searchInput"
-                        type="text"
-                        placeholder="e.g. ORD-1005"
-                        autocomplete="off"
-                    >
+                    </tr>
 
-                </div>
+                </tbody>
 
-                <div class="filter-group">
+            </table>
 
-                    <label for="categoryFilter">
-                        Category
-                    </label>
+        </div>
 
-                    <select id="categoryFilter">
-
-                        <option value="ALL">
-                            All Categories
-                        </option>
-
-                        <option value="AMOUNT_MISMATCH">
-                            AMOUNT_MISMATCH
-                        </option>
-
-                        <option value="MISSING_BANK">
-                            MISSING_BANK
-                        </option>
-
-                        <option value="NO_SETTLEMENT">
-                            NO_SETTLEMENT
-                        </option>
-
-                        <option value="UNRESOLVED">
-                            UNRESOLVED
-                        </option>
-
-                        <option value="FUZZY_MATCH">
-                            FUZZY_MATCH
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <button
-                    id="clearFiltersButton"
-                    class="secondary-button"
-                >
-                    Clear Filters
-                </button>
-
-            </div>
-
-            <div
-                id="filterSummary"
-                class="filter-summary"
-            >
-                Load exceptions to use filters.
-            </div>
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-                            <th>Order</th>
-                            <th>Category</th>
-                            <th>Confidence</th>
-                            <th>Difference</th>
-                            <th>Suggested Action</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="exceptionsTable">
-
-                        <tr>
-
-                            <td
-                                colspan="5"
-                                class="empty-state"
-                            >
-                                Click "Load Exceptions"
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-            <div
-                id="pagination"
-                class="pagination hidden"
-            >
-
-                <button
-                    id="previousPageButton"
-                    class="secondary-button"
-                >
-                    Previous
-                </button>
-
-                <span
-                    id="pageInfo"
-                    class="page-info"
-                >
-                    Page 1 of 1
-                </span>
-
-                <button
-                    id="nextPageButton"
-                    class="secondary-button"
-                >
-                    Next
-                </button>
-
-            </div>
-
-        </section>
-
-        <section
-            id="orderDetailsPanel"
-            class="panel details-panel hidden"
+        <div
+            id="pagination"
+            class="pagination hidden"
         >
 
-            <div class="panel-header">
-
-                <div>
-                    <h3>Order Details</h3>
-
-                    <p id="detailsSubtitle">
-                        Select an order to inspect.
-                    </p>
-                </div>
-
-                <button
-                    id="closeDetailsButton"
-                    class="secondary-button"
-                >
-                    Close
-                </button>
-
-            </div>
-
-            <div
-                id="orderDetails"
-                class="details-content"
+            <button
+                id="previousPageButton"
+                class="secondary-button"
             >
-                Select an order from the exception table.
+                Previous
+            </button>
+
+            <span
+                id="pageInfo"
+                class="page-info"
+            >
+                Page 1 of 1
+            </span>
+
+            <button
+                id="nextPageButton"
+                class="secondary-button"
+            >
+                Next
+            </button>
+
+        </div>
+
+    </section>
+
+    <section
+        id="orderDetailsPanel"
+        class="panel details-panel hidden"
+    >
+
+        <div class="panel-header">
+
+            <div>
+                <h3>Order Details</h3>
+
+                <p id="detailsSubtitle">
+                    Select an order to inspect.
+                </p>
             </div>
 
-        </section>
+            <button
+                id="closeDetailsButton"
+                class="secondary-button"
+            >
+                Close
+            </button>
 
-    </main>
+        </div>
 
-    <footer>
-        ReconAI • Finance Reconciliation Platform
-    </footer>
+        <div
+            id="orderDetails"
+            class="details-content"
+        >
+            Select an order from the exception table.
+        </div>
 
-    <script src="app.js"></script>
+    </section>
+
+</main>
+
+<footer>
+    ReconAI • Finance Reconciliation Platform
+</footer>
+
+<script src="app.js"></script>
 
 </body>
 </html>

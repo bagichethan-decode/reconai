@@ -1,37 +1,21 @@
-const API_BASE =
-    "http://localhost:3000";
-
+const API_BASE = "http://localhost:3000";
 const PAGE_SIZE = 10;
 
 let allExceptions = [];
 let currentPage = 1;
 
-// ============================================================
-// API
-// ============================================================
-
 async function fetchJson(endpoint) {
-    const response =
-        await fetch(
-            `${API_BASE}${endpoint}`
-        );
+    const response = await fetch(`${API_BASE}${endpoint}`);
 
     if (!response.ok) {
-        throw new Error(
-            `API request failed: ${response.status}`
-        );
+        throw new Error(`API request failed: ${response.status}`);
     }
 
     return response.json();
 }
 
-// ============================================================
-// UTILITIES
-// ============================================================
-
 function setText(id, value) {
-    const element =
-        document.getElementById(id);
+    const element = document.getElementById(id);
 
     if (element) {
         element.textContent = value;
@@ -64,72 +48,74 @@ function formatDate(value) {
         return "-";
     }
 
-    return new Date(value)
-        .toLocaleDateString();
+    return new Date(value).toLocaleDateString();
 }
 
-// ============================================================
-// SUMMARY
-// ============================================================
+function getPriority(category) {
+    const priorityMap = {
+        AMOUNT_MISMATCH: 1,
+        MISSING_BANK: 1,
+        NO_SETTLEMENT: 2,
+        UNRESOLVED: 2,
+        FUZZY_MATCH: 3
+    };
+
+    return priorityMap[
+        String(category || "").toUpperCase()
+    ] || 99;
+}
+
+function getSeverity(category) {
+    const normalized =
+        String(category || "").toUpperCase();
+
+    if (
+        normalized === "AMOUNT_MISMATCH" ||
+        normalized === "MISSING_BANK"
+    ) {
+        return "HIGH";
+    }
+
+    if (
+        normalized === "NO_SETTLEMENT" ||
+        normalized === "UNRESOLVED"
+    ) {
+        return "MEDIUM";
+    }
+
+    if (normalized === "FUZZY_MATCH") {
+        return "LOW";
+    }
+
+    return "MEDIUM";
+}
 
 async function loadSummary() {
     const result =
-        await fetchJson(
-            "/api/reconciliation/summary"
-        );
+        await fetchJson("/api/reconciliation/summary");
 
-    const summary =
-        result.summary;
+    const summary = result.summary;
 
-    setText(
-        "ordersCount",
-        summary.orders
-    );
-
-    setText(
-        "settlementsCount",
-        summary.settlements
-    );
-
-    setText(
-        "bankCount",
-        summary.bank_entries
-    );
-
-    setText(
-        "exceptionsCount",
-        summary.exceptions
-    );
-
-    setText(
-        "matchRate",
-        `${summary.match_rate}%`
-    );
+    setText("ordersCount", summary.orders);
+    setText("settlementsCount", summary.settlements);
+    setText("bankCount", summary.bank_entries);
+    setText("exceptionsCount", summary.exceptions);
+    setText("matchRate", `${summary.match_rate}%`);
 
     const categoryList =
-        document.getElementById(
-            "categoryList"
-        );
+        document.getElementById("categoryList");
 
     categoryList.innerHTML = "";
 
-    for (
-        const item
-        of result.categories
-    ) {
+    for (const item of result.categories) {
         const element =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
-        element.className =
-            "category-item";
+        element.className = "category-item";
 
         element.innerHTML = `
             <div class="category-name">
-                ${escapeHtml(
-                    item.category
-                )}
+                ${escapeHtml(item.category)}
             </div>
 
             <div class="category-count">
@@ -137,15 +123,9 @@ async function loadSummary() {
             </div>
         `;
 
-        categoryList.appendChild(
-            element
-        );
+        categoryList.appendChild(element);
     }
 }
-
-// ============================================================
-// LOAD EXCEPTIONS
-// ============================================================
 
 async function loadExceptions() {
     const result =
@@ -163,63 +143,107 @@ async function loadExceptions() {
     applyFilters();
 }
 
-// ============================================================
-// FILTERING
-// ============================================================
-
 function getFilteredExceptions() {
     const searchValue =
         document
-            .getElementById(
-                "searchInput"
-            )
+            .getElementById("searchInput")
             .value
             .trim()
             .toUpperCase();
 
     const selectedCategory =
         document
-            .getElementById(
-                "categoryFilter"
-            )
+            .getElementById("categoryFilter")
             .value
             .trim()
             .toUpperCase();
 
-    return allExceptions.filter(
-        item => {
+    const selectedSort =
+        document
+            .getElementById("sortFilter")
+            .value;
 
+    let filtered =
+        allExceptions.filter(item => {
             const orderId =
-                String(
-                    item.order_id || ""
-                )
+                String(item.order_id || "")
                     .trim()
                     .toUpperCase();
 
             const category =
-                String(
-                    item.category || ""
-                )
+                String(item.category || "")
                     .trim()
                     .toUpperCase();
 
             const orderMatches =
                 searchValue === "" ||
-                orderId.includes(
-                    searchValue
-                );
+                orderId.includes(searchValue);
 
             const categoryMatches =
                 selectedCategory === "ALL" ||
-                category ===
-                selectedCategory;
+                category === selectedCategory;
 
             return (
                 orderMatches &&
                 categoryMatches
             );
-        }
+        });
+
+    filtered = sortExceptions(
+        filtered,
+        selectedSort
     );
+
+    return filtered;
+}
+
+function sortExceptions(rows, sortType) {
+    const sorted = [...rows];
+
+    if (sortType === "DIFFERENCE_DESC") {
+        sorted.sort((a, b) => {
+            const aValue =
+                Number(a.difference_amount) || 0;
+
+            const bValue =
+                Number(b.difference_amount) || 0;
+
+            return bValue - aValue;
+        });
+
+        return sorted;
+    }
+
+    if (sortType === "ORDER_ASC") {
+        sorted.sort((a, b) =>
+            String(a.order_id || "")
+                .localeCompare(
+                    String(b.order_id || "")
+                )
+        );
+
+        return sorted;
+    }
+
+    sorted.sort((a, b) => {
+        const priorityDifference =
+            getPriority(a.category) -
+            getPriority(b.category);
+
+        if (priorityDifference !== 0) {
+            return priorityDifference;
+        }
+
+        const aDifference =
+            Number(a.difference_amount) || 0;
+
+        const bDifference =
+            Number(b.difference_amount) || 0;
+
+        return bDifference - aDifference;
+    });
+
+    return sorted;
 }
 
 function applyFilters() {
@@ -230,22 +254,15 @@ function applyFilters() {
         Math.max(
             1,
             Math.ceil(
-                filtered.length /
-                PAGE_SIZE
+                filtered.length / PAGE_SIZE
             )
         );
 
-    if (
-        currentPage >
-        totalPages
-    ) {
-        currentPage =
-            totalPages;
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
     }
 
-    renderExceptions(
-        filtered
-    );
+    renderExceptions(filtered);
 
     updateFilterSummary(
         filtered.length
@@ -256,17 +273,13 @@ function applyFilters() {
     );
 }
 
-function updateFilterSummary(
-    filteredCount
-) {
+function updateFilterSummary(filteredCount) {
     const summary =
         document.getElementById(
             "filterSummary"
         );
 
-    if (
-        allExceptions.length === 0
-    ) {
+    if (allExceptions.length === 0) {
         summary.textContent =
             "No exceptions loaded.";
 
@@ -277,13 +290,7 @@ function updateFilterSummary(
         `Showing ${filteredCount} of ${allExceptions.length} exceptions`;
 }
 
-// ============================================================
-// PAGINATION
-// ============================================================
-
-function updatePagination(
-    totalItems
-) {
+function updatePagination(totalItems) {
     const pagination =
         document.getElementById(
             "pagination"
@@ -304,20 +311,14 @@ function updatePagination(
             "pageInfo"
         );
 
-    if (
-        totalItems <= PAGE_SIZE
-    ) {
-        pagination.classList.add(
-            "hidden"
-        );
-
+    if (totalItems <= PAGE_SIZE) {
+        pagination.classList.add("hidden");
         return;
     }
 
     const totalPages =
         Math.ceil(
-            totalItems /
-            PAGE_SIZE
+            totalItems / PAGE_SIZE
         );
 
     pagination.classList.remove(
@@ -334,13 +335,7 @@ function updatePagination(
         currentPage === totalPages;
 }
 
-// ============================================================
-// RENDER EXCEPTIONS
-// ============================================================
-
-function renderExceptions(
-    filteredRows
-) {
+function renderExceptions(filteredRows) {
     const table =
         document.getElementById(
             "exceptionsTable"
@@ -348,13 +343,11 @@ function renderExceptions(
 
     table.innerHTML = "";
 
-    if (
-        filteredRows.length === 0
-    ) {
+    if (filteredRows.length === 0) {
         table.innerHTML = `
             <tr>
                 <td
-                    colspan="5"
+                    colspan="6"
                     class="empty-state"
                 >
                     No exceptions match the current filters.
@@ -366,14 +359,10 @@ function renderExceptions(
     }
 
     const startIndex =
-        (
-            currentPage - 1
-        ) *
-        PAGE_SIZE;
+        (currentPage - 1) * PAGE_SIZE;
 
     const endIndex =
-        startIndex +
-        PAGE_SIZE;
+        startIndex + PAGE_SIZE;
 
     const pageRows =
         filteredRows.slice(
@@ -381,23 +370,19 @@ function renderExceptions(
             endIndex
         );
 
-    for (
-        const item
-        of pageRows
-    ) {
+    for (const item of pageRows) {
         const row =
-            document.createElement(
-                "tr"
-            );
+            document.createElement("tr");
 
         const difference =
-            item.difference_amount ===
-            null
+            item.difference_amount === null
                 ? "-"
-                :
-                Number(
+                : Number(
                     item.difference_amount
                 ).toFixed(2);
+
+        const severity =
+            getSeverity(item.category);
 
         row.innerHTML = `
             <td>
@@ -423,6 +408,14 @@ function renderExceptions(
             </td>
 
             <td>
+                <span
+                    class="severity-badge severity-${severity.toLowerCase()}"
+                >
+                    ${severity}
+                </span>
+            </td>
+
+            <td>
                 ${escapeHtml(
                     item.confidence
                 )}
@@ -434,44 +427,29 @@ function renderExceptions(
 
             <td class="action-text">
                 ${escapeHtml(
-                    item.suggested_action ||
-                    "-"
+                    item.suggested_action || "-"
                 )}
             </td>
         `;
 
-        table.appendChild(
-            row
-        );
+        table.appendChild(row);
     }
 
     document
-        .querySelectorAll(
-            ".order-link"
-        )
+        .querySelectorAll(".order-link")
         .forEach(button => {
-
             button.addEventListener(
                 "click",
                 () => {
-
                     loadOrderDetails(
                         button.dataset.orderId
                     );
-
                 }
             );
-
         });
 }
 
-// ============================================================
-// ORDER DETAILS
-// ============================================================
-
-async function loadOrderDetails(
-    orderId
-) {
+async function loadOrderDetails(orderId) {
     const panel =
         document.getElementById(
             "orderDetailsPanel"
@@ -487,9 +465,7 @@ async function loadOrderDetails(
             "detailsSubtitle"
         );
 
-    panel.classList.remove(
-        "hidden"
-    );
+    panel.classList.remove("hidden");
 
     details.innerHTML = `
         <div class="loading">
@@ -508,12 +484,8 @@ async function loadOrderDetails(
                 )}`
             );
 
-        const order =
-            result.order;
-
-        const settlements =
-            result.settlements || [];
-
+        const order = result.order;
+        const settlements = result.settlements || [];
         const reconciliation =
             result.reconciliation;
 
@@ -675,7 +647,6 @@ async function loadOrderDetails(
                     reconciliation
                         ? `
                             <div class="detail-card">
-
                                 <span class="detail-label">
                                     Category
                                 </span>
@@ -685,11 +656,9 @@ async function loadOrderDetails(
                                         reconciliation.category
                                     )}
                                 </strong>
-
                             </div>
 
                             <div class="detail-card">
-
                                 <span class="detail-label">
                                     Confidence
                                 </span>
@@ -699,11 +668,9 @@ async function loadOrderDetails(
                                         reconciliation.confidence
                                     )}
                                 </strong>
-
                             </div>
 
                             <div class="detail-card">
-
                                 <span class="detail-label">
                                     Difference
                                 </span>
@@ -718,7 +685,6 @@ async function loadOrderDetails(
                                             )
                                     }
                                 </strong>
-
                             </div>
                           `
                         : ""
@@ -836,7 +802,7 @@ async function loadOrderDetails(
                             </div>
 
                         </div>
-                    `
+                      `
                     : ""
             }
         `;
@@ -857,10 +823,6 @@ async function loadOrderDetails(
     }
 }
 
-// ============================================================
-// REFRESH
-// ============================================================
-
 async function refreshDashboard() {
     try {
         await loadSummary();
@@ -878,30 +840,20 @@ async function refreshDashboard() {
     }
 }
 
-// ============================================================
-// EVENTS
-// ============================================================
-
 document
-    .getElementById(
-        "refreshButton"
-    )
+    .getElementById("refreshButton")
     .addEventListener(
         "click",
         refreshDashboard
     );
 
 document
-    .getElementById(
-        "loadExceptionsButton"
-    )
+    .getElementById("loadExceptionsButton")
     .addEventListener(
         "click",
         async () => {
-
             try {
                 await loadExceptions();
-
             } catch (error) {
                 console.error(error);
 
@@ -909,48 +861,44 @@ document
                     "Could not load exceptions."
                 );
             }
-
         }
     );
 
 document
-    .getElementById(
-        "searchInput"
-    )
+    .getElementById("searchInput")
     .addEventListener(
         "input",
         () => {
-
             currentPage = 1;
-
             applyFilters();
-
         }
     );
 
 document
-    .getElementById(
-        "categoryFilter"
-    )
+    .getElementById("categoryFilter")
     .addEventListener(
         "change",
         () => {
-
             currentPage = 1;
-
             applyFilters();
-
         }
     );
 
 document
-    .getElementById(
-        "clearFiltersButton"
-    )
+    .getElementById("sortFilter")
+    .addEventListener(
+        "change",
+        () => {
+            currentPage = 1;
+            applyFilters();
+        }
+    );
+
+document
+    .getElementById("clearFiltersButton")
     .addEventListener(
         "click",
         () => {
-
             document
                 .getElementById(
                     "searchInput"
@@ -963,40 +911,35 @@ document
                 )
                 .value = "ALL";
 
+            document
+                .getElementById(
+                    "sortFilter"
+                )
+                .value = "PRIORITY";
+
             currentPage = 1;
 
             applyFilters();
-
         }
     );
 
 document
-    .getElementById(
-        "previousPageButton"
-    )
+    .getElementById("previousPageButton")
     .addEventListener(
         "click",
         () => {
-
-            if (
-                currentPage > 1
-            ) {
+            if (currentPage > 1) {
                 currentPage--;
-
                 applyFilters();
             }
-
         }
     );
 
 document
-    .getElementById(
-        "nextPageButton"
-    )
+    .getElementById("nextPageButton")
     .addEventListener(
         "click",
         () => {
-
             const filtered =
                 getFilteredExceptions();
 
@@ -1011,21 +954,16 @@ document
                 totalPages
             ) {
                 currentPage++;
-
                 applyFilters();
             }
-
         }
     );
 
 document
-    .getElementById(
-        "closeDetailsButton"
-    )
+    .getElementById("closeDetailsButton")
     .addEventListener(
         "click",
         () => {
-
             document
                 .getElementById(
                     "orderDetailsPanel"
@@ -1033,12 +971,7 @@ document
                 .classList.add(
                     "hidden"
                 );
-
         }
     );
-
-// ============================================================
-// START
-// ============================================================
 
 refreshDashboard();
