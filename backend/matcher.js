@@ -5,6 +5,10 @@ const {
     saveReconciliationResults
 } = require("./save-reconciliation");
 
+const {
+    explainException
+} = require("./ai-explainer");
+
 // ============================================================
 // ReconAI - Multi-Source Payment Reconciliation Engine
 // ============================================================
@@ -607,6 +611,39 @@ function findDuplicateSettlements(
 }
 
 // ------------------------------------------------------------
+// Add local explanation to exceptions
+// ------------------------------------------------------------
+
+function enrichWithExplanations(
+    results
+) {
+    for (
+        const result
+        of results
+    ) {
+        if (
+            result.status !==
+            "EXCEPTION"
+        ) {
+            continue;
+        }
+
+        const explanation =
+            explainException(
+                result
+            );
+
+        result.ai_explanation =
+            explanation.explanation;
+
+        result.suggested_action =
+            explanation.suggested_action;
+    }
+
+    return results;
+}
+
+// ------------------------------------------------------------
 // MAIN RECONCILIATION
 // ------------------------------------------------------------
 
@@ -1025,7 +1062,7 @@ async function runReconciliation() {
         // RESULTS
         // ====================================================
 
-        const primaryArray =
+        let primaryArray =
             Array.from(
                 primaryResults.values()
             );
@@ -1055,6 +1092,24 @@ async function runReconciliation() {
                         orders.length
                     ) *
                     100;
+
+        // ====================================================
+        // EXPLANATION LAYER
+        // ====================================================
+
+        console.log(
+            "--------------- EXPLANATIONS -------------"
+        );
+
+        enrichWithExplanations(
+            primaryArray
+        );
+
+        console.log(
+            `Generated explanations for ${exceptionPrimary.length} exceptions.`
+        );
+
+        console.log("");
 
         // ====================================================
         // CATEGORY COUNTS
@@ -1180,7 +1235,15 @@ async function runReconciliation() {
             of exceptionPrimary
         ) {
             console.log(
-                `${result.order_id} | ${result.category} | ${result.reason}`
+                `${result.order_id} | ${result.category}`
+            );
+
+            console.log(
+                `  Explanation: ${result.ai_explanation}`
+            );
+
+            console.log(
+                `  Action: ${result.suggested_action}`
             );
         }
 
