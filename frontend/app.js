@@ -1,9 +1,11 @@
 const API_BASE =
     "http://localhost:3000";
 
-async function fetchJson(
-    endpoint
-) {
+// ============================================================
+// API
+// ============================================================
+
+async function fetchJson(endpoint) {
     const response =
         await fetch(
             `${API_BASE}${endpoint}`
@@ -18,13 +20,67 @@ async function fetchJson(
     return response.json();
 }
 
-function setText(
-    id,
-    value
-) {
-    document.getElementById(id)
-        .textContent = value;
+// ============================================================
+// Utilities
+// ============================================================
+
+function setText(id, value) {
+    const element =
+        document.getElementById(id);
+
+    if (element) {
+        element.textContent = value;
+    }
 }
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+function formatAmount(value) {
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "-";
+    }
+
+    return Number(value).toFixed(2);
+}
+
+function formatDate(value) {
+    if (!value) {
+        return "-";
+    }
+
+    return new Date(value)
+        .toLocaleDateString();
+}
+
+// ============================================================
+// SUMMARY
+// ============================================================
 
 async function loadSummary() {
     const result =
@@ -95,6 +151,10 @@ async function loadSummary() {
     }
 }
 
+// ============================================================
+// EXCEPTIONS
+// ============================================================
+
 async function loadExceptions() {
     const result =
         await fetchJson(
@@ -128,19 +188,30 @@ async function loadExceptions() {
 
         row.innerHTML = `
             <td>
-                <strong>
-                    ${escapeHtml(item.order_id)}
-                </strong>
+                <button
+                    class="order-link"
+                    data-order-id="${escapeHtml(
+                        item.order_id
+                    )}"
+                >
+                    ${escapeHtml(
+                        item.order_id
+                    )}
+                </button>
             </td>
 
             <td>
                 <span class="badge">
-                    ${escapeHtml(item.category)}
+                    ${escapeHtml(
+                        item.category
+                    )}
                 </span>
             </td>
 
             <td>
-                ${escapeHtml(item.confidence)}
+                ${escapeHtml(
+                    item.confidence
+                )}
             </td>
 
             <td>
@@ -155,7 +226,9 @@ async function loadExceptions() {
             </td>
         `;
 
-        table.appendChild(row);
+        table.appendChild(
+            row
+        );
     }
 
     if (
@@ -171,32 +244,436 @@ async function loadExceptions() {
                 </td>
             </tr>
         `;
+
+        return;
+    }
+
+    document
+        .querySelectorAll(
+            ".order-link"
+        )
+        .forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    loadOrderDetails(
+                        button.dataset.orderId
+                    );
+                }
+            );
+        });
+}
+
+// ============================================================
+// ORDER DETAILS
+// ============================================================
+
+async function loadOrderDetails(
+    orderId
+) {
+    const panel =
+        document.getElementById(
+            "orderDetailsPanel"
+        );
+
+    const details =
+        document.getElementById(
+            "orderDetails"
+        );
+
+    const subtitle =
+        document.getElementById(
+            "detailsSubtitle"
+        );
+
+    panel.classList.remove(
+        "hidden"
+    );
+
+    details.innerHTML = `
+        <div class="loading">
+            Loading ${escapeHtml(orderId)}...
+        </div>
+    `;
+
+    subtitle.textContent =
+        `Reconciliation details for ${orderId}`;
+
+    try {
+        const result =
+            await fetchJson(
+                `/api/reconciliation/orders/${encodeURIComponent(
+                    orderId
+                )}`
+            );
+
+        const order =
+            result.order;
+
+        const settlements =
+            result.settlements || [];
+
+        const reconciliation =
+            result.reconciliation;
+
+        const settlementHtml =
+            settlements.length === 0
+                ? `
+                    <div class="detail-empty">
+                        No settlement records found.
+                    </div>
+                  `
+                :
+                settlements
+                    .map(
+                        settlement => `
+                            <div class="settlement-card">
+
+                                <div>
+                                    <span>
+                                        Payment ID
+                                    </span>
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            settlement.payment_id
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>
+                                        Order Reference
+                                    </span>
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            settlement.order_ref
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>
+                                        Gross Amount
+                                    </span>
+
+                                    <strong>
+                                        ${formatAmount(
+                                            settlement.gross_amount
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>
+                                        Fee
+                                    </span>
+
+                                    <strong>
+                                        ${formatAmount(
+                                            settlement.fee
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>
+                                        Settled Amount
+                                    </span>
+
+                                    <strong>
+                                        ${formatAmount(
+                                            settlement.settled_amount
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>
+                                        Settlement Date
+                                    </span>
+
+                                    <strong>
+                                        ${formatDate(
+                                            settlement.settlement_date
+                                        )}
+                                    </strong>
+                                </div>
+
+                            </div>
+                        `
+                    )
+                    .join("");
+
+        details.innerHTML = `
+
+            <div class="detail-grid">
+
+                <div class="detail-card">
+
+                    <span class="detail-label">
+                        Order ID
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            order.order_id
+                        )}
+                    </strong>
+
+                </div>
+
+                <div class="detail-card">
+
+                    <span class="detail-label">
+                        Customer
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            order.customer_name
+                        )}
+                    </strong>
+
+                </div>
+
+                <div class="detail-card">
+
+                    <span class="detail-label">
+                        Order Amount
+                    </span>
+
+                    <strong>
+                        ${formatAmount(
+                            order.amount
+                        )}
+                    </strong>
+
+                </div>
+
+                <div class="detail-card">
+
+                    <span class="detail-label">
+                        Order Date
+                    </span>
+
+                    <strong>
+                        ${formatDate(
+                            order.order_date
+                        )}
+                    </strong>
+
+                </div>
+
+                <div class="detail-card">
+
+                    <span class="detail-label">
+                        Status
+                    </span>
+
+                    <strong>
+                        ${escapeHtml(
+                            order.status
+                        )}
+                    </strong>
+
+                </div>
+
+                ${
+                    reconciliation
+                        ? `
+                            <div class="detail-card">
+
+                                <span class="detail-label">
+                                    Category
+                                </span>
+
+                                <strong>
+                                    ${escapeHtml(
+                                        reconciliation.category
+                                    )}
+                                </strong>
+
+                            </div>
+
+                            <div class="detail-card">
+
+                                <span class="detail-label">
+                                    Confidence
+                                </span>
+
+                                <strong>
+                                    ${escapeHtml(
+                                        reconciliation.confidence
+                                    )}
+                                </strong>
+
+                            </div>
+
+                            <div class="detail-card">
+
+                                <span class="detail-label">
+                                    Difference
+                                </span>
+
+                                <strong>
+                                    ${
+                                        reconciliation.difference_amount ===
+                                        null
+                                            ? "-"
+                                            :
+                                            formatAmount(
+                                                reconciliation.difference_amount
+                                            )
+                                    }
+                                </strong>
+
+                            </div>
+                          `
+                        : ""
+                }
+
+            </div>
+
+            <div class="details-section">
+
+                <h4>
+                    Settlement Records
+                </h4>
+
+                ${settlementHtml}
+
+            </div>
+
+            ${
+                reconciliation
+                    ? `
+                        <div class="details-section">
+
+                            <h4>
+                                Reconciliation Decision
+                            </h4>
+
+                            <div class="decision-card">
+
+                                <div class="decision-row">
+                                    <span>
+                                        Match Status
+                                    </span>
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            reconciliation.match_status
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div class="decision-row">
+                                    <span>
+                                        Match Pass
+                                    </span>
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            reconciliation.match_pass
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div class="decision-row">
+                                    <span>
+                                        Category
+                                    </span>
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            reconciliation.category
+                                        )}
+                                    </strong>
+                                </div>
+
+                                <div class="decision-row">
+                                    <span>
+                                        Raw Reason
+                                    </span>
+
+                                    <p>
+                                        ${escapeHtml(
+                                            reconciliation.raw_reason
+                                        )}
+                                    </p>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="details-section">
+
+                            <h4>
+                                Explanation
+                            </h4>
+
+                            <div class="explanation-card">
+
+                                <p>
+                                    ${escapeHtml(
+                                        reconciliation.ai_explanation ||
+                                        "No explanation available."
+                                    )}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="details-section">
+
+                            <h4>
+                                Suggested Action
+                            </h4>
+
+                            <div class="action-card">
+
+                                <p>
+                                    ${escapeHtml(
+                                        reconciliation.suggested_action ||
+                                        "No suggested action available."
+                                    )}
+                                </p>
+
+                            </div>
+
+                        </div>
+                      `
+                    : `
+                        <div class="detail-empty">
+                            No reconciliation record found.
+                        </div>
+                      `
+            }
+        `;
+
+        panel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        details.innerHTML = `
+            <div class="error-box">
+                Failed to load order details.
+            </div>
+        `;
     }
 }
 
-function escapeHtml(value) {
-    return String(value)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-}
+// ============================================================
+// Refresh
+// ============================================================
 
 async function refreshDashboard() {
     try {
@@ -214,6 +691,10 @@ async function refreshDashboard() {
         );
     }
 }
+
+// ============================================================
+// Events
+// ============================================================
 
 document
     .getElementById(
@@ -243,5 +724,26 @@ document
             }
         }
     );
+
+document
+    .getElementById(
+        "closeDetailsButton"
+    )
+    .addEventListener(
+        "click",
+        () => {
+            document
+                .getElementById(
+                    "orderDetailsPanel"
+                )
+                .classList.add(
+                    "hidden"
+                );
+        }
+    );
+
+// ============================================================
+// Initial load
+// ============================================================
 
 refreshDashboard();

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -15,26 +16,34 @@
 <body>
 
     <header class="topbar">
+
         <div>
             <h1>ReconAI</h1>
-            <p>Payment Reconciliation Control Center</p>
+
+            <p>
+                Payment Reconciliation Control Center
+            </p>
         </div>
 
         <div class="status">
             <span class="status-dot"></span>
             API Connected
         </div>
+
     </header>
 
     <main class="container">
 
         <section class="hero">
+
             <div>
-                <h2>Reconciliation Overview</h2>
+                <h2>
+                    Reconciliation Overview
+                </h2>
 
                 <p>
-                    Monitor orders, settlements, bank entries,
-                    matches and exceptions from one place.
+                    Monitor orders, settlements,
+                    bank entries and exceptions.
                 </p>
             </div>
 
@@ -44,6 +53,7 @@
             >
                 Refresh
             </button>
+
         </section>
 
         <section class="cards">
@@ -118,13 +128,17 @@
         <section class="panel">
 
             <div class="panel-header">
+
                 <div>
-                    <h3>Exception Categories</h3>
+                    <h3>
+                        Exception Categories
+                    </h3>
 
                     <p>
                         Current reconciliation issues
                     </p>
                 </div>
+
             </div>
 
             <div
@@ -139,11 +153,15 @@
         <section class="panel">
 
             <div class="panel-header">
+
                 <div>
-                    <h3>Recent Exceptions</h3>
+                    <h3>
+                        Recent Exceptions
+                    </h3>
 
                     <p>
-                        Latest items requiring attention
+                        Click an order to inspect
+                        its reconciliation details.
                     </p>
                 </div>
 
@@ -153,6 +171,7 @@
                 >
                     Load Exceptions
                 </button>
+
             </div>
 
             <div class="table-wrapper">
@@ -160,6 +179,7 @@
                 <table>
 
                     <thead>
+
                         <tr>
                             <th>Order</th>
                             <th>Category</th>
@@ -167,21 +187,65 @@
                             <th>Difference</th>
                             <th>Suggested Action</th>
                         </tr>
+
                     </thead>
 
                     <tbody id="exceptionsTable">
+
                         <tr>
+
                             <td
                                 colspan="5"
                                 class="empty-state"
                             >
                                 Click "Load Exceptions"
                             </td>
+
                         </tr>
+
                     </tbody>
 
                 </table>
 
+            </div>
+
+        </section>
+
+        <!-- ==================================================
+             ORDER DETAILS
+        ================================================== -->
+
+        <section
+            id="orderDetailsPanel"
+            class="panel details-panel hidden"
+        >
+
+            <div class="panel-header">
+
+                <div>
+                    <h3>
+                        Order Details
+                    </h3>
+
+                    <p id="detailsSubtitle">
+                        Select an order to inspect.
+                    </p>
+                </div>
+
+                <button
+                    id="closeDetailsButton"
+                    class="secondary-button"
+                >
+                    Close
+                </button>
+
+            </div>
+
+            <div
+                id="orderDetails"
+                class="details-content"
+            >
+                Select an order from the exception table.
             </div>
 
         </section>

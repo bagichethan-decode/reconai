@@ -4,40 +4,50 @@
 
 body {
     margin: 0;
+
     font-family:
         "Segoe UI",
         Arial,
         sans-serif;
 
     background: #f5f7fb;
+
     color: #172033;
 }
 
 .topbar {
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
 
     padding: 22px 40px;
 
     background: #111827;
+
     color: white;
 }
 
 .topbar h1 {
     margin: 0;
+
     font-size: 26px;
 }
 
 .topbar p {
     margin: 5px 0 0;
+
     color: #aeb8ca;
+
     font-size: 14px;
 }
 
 .status {
     display: flex;
+
     align-items: center;
+
     gap: 8px;
 
     font-size: 14px;
@@ -45,7 +55,9 @@ body {
 
 .status-dot {
     width: 9px;
+
     height: 9px;
+
     border-radius: 50%;
 
     background: #22c55e;
@@ -62,7 +74,9 @@ body {
 
 .hero {
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
 
     margin-bottom: 25px;
@@ -70,17 +84,20 @@ body {
 
 .hero h2 {
     margin: 0 0 8px;
+
     font-size: 30px;
 }
 
 .hero p {
     margin: 0;
+
     color: #677085;
 }
 
 .refresh-button,
 .secondary-button {
     border: none;
+
     border-radius: 8px;
 
     padding: 11px 18px;
@@ -92,11 +109,13 @@ body {
 
 .refresh-button {
     background: #2563eb;
+
     color: white;
 }
 
 .secondary-button {
     background: #e8edf7;
+
     color: #25324b;
 }
 
@@ -106,10 +125,7 @@ body {
     grid-template-columns:
         repeat(
             5,
-            minmax(
-                0,
-                1fr
-            )
+            minmax(0, 1fr)
         );
 
     gap: 16px;
@@ -179,7 +195,9 @@ body {
 
 .panel-header {
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
 
     padding: 20px 22px;
@@ -206,10 +224,7 @@ body {
     grid-template-columns:
         repeat(
             3,
-            minmax(
-                0,
-                1fr
-            )
+            minmax(0, 1fr)
         );
 
     gap: 12px;
@@ -236,6 +251,7 @@ body {
 
 .category-count {
     font-size: 24px;
+
     font-weight: 700;
 }
 
@@ -245,6 +261,7 @@ body {
 
 table {
     width: 100%;
+
     border-collapse: collapse;
 }
 
@@ -284,6 +301,26 @@ th {
     font-weight: 600;
 }
 
+.order-link {
+    border: none;
+
+    background: transparent;
+
+    color: #2563eb;
+
+    padding: 0;
+
+    cursor: pointer;
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+.order-link:hover {
+    text-decoration: underline;
+}
+
 .action-text {
     min-width: 260px;
 
@@ -300,6 +337,187 @@ th {
     color: #8992a3;
 }
 
+.details-panel {
+    scroll-margin-top: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+.details-content {
+    padding: 22px;
+}
+
+.detail-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 14px;
+}
+
+.detail-card {
+    border:
+        1px solid #e5e9f0;
+
+    border-radius: 10px;
+
+    padding: 16px;
+
+    background: #fafbfc;
+}
+
+.detail-label {
+    display: block;
+
+    color: #737e92;
+
+    font-size: 12px;
+
+    margin-bottom: 7px;
+}
+
+.details-section {
+    margin-top: 25px;
+}
+
+.details-section h4 {
+    margin:
+        0 0 12px;
+}
+
+.settlement-card {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            6,
+            minmax(0, 1fr)
+        );
+
+    gap: 12px;
+
+    padding: 16px;
+
+    border:
+        1px solid #e5e9f0;
+
+    border-radius: 10px;
+
+    margin-bottom: 10px;
+}
+
+.settlement-card span {
+    display: block;
+
+    color: #737e92;
+
+    font-size: 12px;
+
+    margin-bottom: 6px;
+}
+
+.settlement-card strong {
+    font-size: 13px;
+}
+
+.decision-card,
+.explanation-card,
+.action-card {
+    border-radius: 10px;
+
+    padding: 18px;
+
+    border:
+        1px solid #e5e9f0;
+}
+
+.decision-card {
+    background: #fafbfc;
+}
+
+.decision-row {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 10px 0;
+
+    border-bottom:
+        1px solid #e9edf3;
+}
+
+.decision-row:last-child {
+    border-bottom: none;
+}
+
+.decision-row span {
+    color: #707b8f;
+}
+
+.decision-row p {
+    max-width: 70%;
+
+    margin: 0;
+
+    color: #465268;
+
+    line-height: 1.5;
+
+    text-align: right;
+}
+
+.explanation-card {
+    background: #f8fbff;
+
+    border-left:
+        4px solid #2563eb;
+}
+
+.action-card {
+    background: #f7fcf8;
+
+    border-left:
+        4px solid #16a34a;
+}
+
+.explanation-card p,
+.action-card p {
+    margin: 0;
+
+    line-height: 1.6;
+
+    color: #4b5568;
+}
+
+.loading,
+.detail-empty,
+.error-box {
+    padding: 24px;
+
+    text-align: center;
+
+    color: #7d8799;
+}
+
+.error-box {
+    color: #b91c1c;
+
+    background: #fff7f7;
+
+    border:
+        1px solid #fecaca;
+
+    border-radius: 8px;
+}
+
 footer {
     text-align: center;
 
@@ -311,16 +529,13 @@ footer {
 }
 
 @media (
-    max-width: 1000px
+    max-width: 1100px
 ) {
     .cards {
         grid-template-columns:
             repeat(
                 2,
-                minmax(
-                    0,
-                    1fr
-                )
+                minmax(0, 1fr)
             );
     }
 
@@ -328,10 +543,23 @@ footer {
         grid-template-columns:
             repeat(
                 2,
-                minmax(
-                    0,
-                    1fr
-                )
+                minmax(0, 1fr)
+            );
+    }
+
+    .detail-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+    .settlement-card {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
             );
     }
 }
@@ -342,17 +570,34 @@ footer {
     .topbar,
     .hero {
         flex-direction: column;
+
         align-items: flex-start;
+
         gap: 18px;
     }
 
     .cards,
-    .category-list {
+    .category-list,
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settlement-card {
         grid-template-columns: 1fr;
     }
 
     .container {
         width:
             calc(100% - 24px);
+    }
+
+    .decision-row {
+        flex-direction: column;
+    }
+
+    .decision-row p {
+        max-width: 100%;
+
+        text-align: left;
     }
 }
