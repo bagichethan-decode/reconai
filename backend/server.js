@@ -15,37 +15,109 @@ const app = express();
 const PORT =
     Number(process.env.PORT) || 3000;
 
+// ============================================================
+// MIDDLEWARE
+// ============================================================
+
 app.use(cors());
 app.use(express.json());
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function sendError(res, status, message) {
+    return res.status(status).json({
+        success: false,
+        error: message
+    });
+}
+
+function isValidOrderId(orderId) {
+    return /^ORD-\d+$/.test(orderId);
+}
+
+function parseLimit(value) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return 50;
+    }
+
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return null;
+    }
+
+    return Math.min(parsed, 200);
+}
+
+function parseOffset(value) {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return 0;
+    }
+
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed) || parsed < 0) {
+        return null;
+    }
+
+    return parsed;
+}
+
+const VALID_CATEGORIES = new Set([
+    "AMOUNT_MISMATCH",
+    "MISSING_BANK",
+    "NO_SETTLEMENT",
+    "UNRESOLVED",
+    "FUZZY_MATCH",
+    "DUPLICATE_SETTLEMENT"
+]);
 
 // ============================================================
 // HEALTH
 // ============================================================
 
-app.get("/api/health", async (req, res) => {
-    try {
-        const [rows] =
-            await pool.query(
-                "SELECT 1 AS connected"
+app.get(
+    "/api/health",
+    async (req, res) => {
+        try {
+            const [rows] =
+                await pool.query(
+                    "SELECT 1 AS connected"
+                );
+
+            res.json({
+                success: true,
+                service: "ReconAI API",
+                database:
+                    rows[0].connected === 1
+                        ? "connected"
+                        : "unknown"
+            });
+
+        } catch (error) {
+            console.error(
+                "Health check failed:",
+                error
             );
 
-        res.json({
-            success: true,
-            service: "ReconAI API",
-            database:
-                rows[0].connected === 1
-                    ? "connected"
-                    : "unknown"
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error:
+            sendError(
+                res,
+                500,
                 "Database connection failed."
-        });
+            );
+        }
     }
-});
+);
 
 // ============================================================
 // SUMMARY
@@ -55,99 +127,102 @@ app.get(
     "/api/reconciliation/summary",
     async (req, res) => {
         try {
-            const [
-                ordersRows
-            ] = await pool.query(`
-                SELECT COUNT(*) AS total
-                FROM orders
-            `);
+            const [ordersRows] =
+                await pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM orders
+                `);
 
-            const [
-                settlementsRows
-            ] = await pool.query(`
-                SELECT COUNT(*) AS total
-                FROM settlements
-            `);
+            const [settlementsRows] =
+                await pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM settlements
+                `);
 
-            const [
-                bankRows
-            ] = await pool.query(`
-                SELECT COUNT(*) AS total
-                FROM bank_statement
-            `);
+            const [bankRows] =
+                await pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM bank_statement
+                `);
 
-            const [
-                auditRows
-            ] = await pool.query(`
-                SELECT COUNT(*) AS total
-                FROM reconciliation_log
-            `);
+            const [auditRows] =
+                await pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM reconciliation_log
+                `);
 
-            const [
-                matchedRows
-            ] = await pool.query(`
-                SELECT COUNT(*) AS total
-                FROM reconciliation_log
-                WHERE match_status = 'MATCHED'
-            `);
+            const [matchedRows] =
+                await pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM reconciliation_log
+                    WHERE match_status = 'MATCHED'
+                `);
 
-            const [
-                exceptionRows
-            ] = await pool.query(`
-                SELECT COUNT(*) AS total
-                FROM reconciliation_log
-                WHERE match_status = 'EXCEPTION'
-            `);
+            const [exceptionRows] =
+                await pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM reconciliation_log
+                    WHERE match_status = 'EXCEPTION'
+                `);
 
-            const [
-                categoryRows
-            ] = await pool.query(`
-                SELECT
-                    category,
-                    COUNT(*) AS count
-                FROM reconciliation_log
-                GROUP BY category
-                ORDER BY count DESC
-            `);
+            const [categoryRows] =
+                await pool.query(`
+                    SELECT
+                        category,
+                        COUNT(*) AS count
+                    FROM reconciliation_log
+                    GROUP BY category
+                    ORDER BY count DESC
+                `);
 
             const totalOrders =
-                ordersRows[0].total;
+                Number(
+                    ordersRows[0].total
+                );
 
             const matched =
-                matchedRows[0].total;
+                Number(
+                    matchedRows[0].total
+                );
 
             const matchRate =
                 totalOrders === 0
                     ? 0
-                    :
-                    Number(
+                    : Number(
                         (
                             matched /
                             totalOrders
-                        ) *
-                        100
+                        ) * 100
                     ).toFixed(2);
 
             res.json({
                 success: true,
+
                 summary: {
                     orders:
-                        ordersRows[0].total,
+                        totalOrders,
 
                     settlements:
-                        settlementsRows[0].total,
+                        Number(
+                            settlementsRows[0].total
+                        ),
 
                     bank_entries:
-                        bankRows[0].total,
+                        Number(
+                            bankRows[0].total
+                        ),
 
                     audit_records:
-                        auditRows[0].total,
+                        Number(
+                            auditRows[0].total
+                        ),
 
-                    matched:
-                        matched,
+                    matched,
 
                     exceptions:
-                        exceptionRows[0].total,
+                        Number(
+                            exceptionRows[0].total
+                        ),
 
                     match_rate:
                         Number(matchRate)
@@ -158,13 +233,16 @@ app.get(
             });
 
         } catch (error) {
-            console.error(error);
+            console.error(
+                "Summary error:",
+                error
+            );
 
-            res.status(500).json({
-                success: false,
-                error:
-                    "Failed to load reconciliation summary."
-            });
+            sendError(
+                res,
+                500,
+                "Failed to load reconciliation summary."
+            );
         }
     }
 );
@@ -176,53 +254,60 @@ app.get(
 app.get(
     "/api/reconciliation/orders",
     async (req, res) => {
-        try {
-            const limit =
-                Math.min(
-                    Math.max(
-                        Number(
-                            req.query.limit
-                        ) || 50,
-                        1
-                    ),
-                    200
-                );
 
-            const offset =
-                Math.max(
-                    Number(
-                        req.query.offset
-                    ) || 0,
-                    0
-                );
-
-            const [
-                rows
-            ] = await pool.query(
-                `
-                SELECT
-                    log_id,
-                    order_id,
-                    payment_id,
-                    utr,
-                    match_status,
-                    match_pass,
-                    confidence,
-                    category,
-                    difference_amount,
-                    raw_reason,
-                    ai_explanation,
-                    suggested_action,
-                    created_at
-                FROM reconciliation_log
-                ORDER BY log_id DESC
-                LIMIT ? OFFSET ?
-                `,
-                [
-                    limit,
-                    offset
-                ]
+        const limit =
+            parseLimit(
+                req.query.limit
             );
+
+        const offset =
+            parseOffset(
+                req.query.offset
+            );
+
+        if (limit === null) {
+            return sendError(
+                res,
+                400,
+                "Invalid limit. Use a positive integer."
+            );
+        }
+
+        if (offset === null) {
+            return sendError(
+                res,
+                400,
+                "Invalid offset. Use a non-negative integer."
+            );
+        }
+
+        try {
+            const [rows] =
+                await pool.query(
+                    `
+                    SELECT
+                        log_id,
+                        order_id,
+                        payment_id,
+                        utr,
+                        match_status,
+                        match_pass,
+                        confidence,
+                        category,
+                        difference_amount,
+                        raw_reason,
+                        ai_explanation,
+                        suggested_action,
+                        created_at
+                    FROM reconciliation_log
+                    ORDER BY log_id DESC
+                    LIMIT ? OFFSET ?
+                    `,
+                    [
+                        limit,
+                        offset
+                    ]
+                );
 
             res.json({
                 success: true,
@@ -233,13 +318,16 @@ app.get(
             });
 
         } catch (error) {
-            console.error(error);
+            console.error(
+                "Orders error:",
+                error
+            );
 
-            res.status(500).json({
-                success: false,
-                error:
-                    "Failed to load reconciliation results."
-            });
+            sendError(
+                res,
+                500,
+                "Failed to load reconciliation results."
+            );
         }
     }
 );
@@ -251,10 +339,32 @@ app.get(
 app.get(
     "/api/reconciliation/exceptions",
     async (req, res) => {
-        try {
-            const category =
-                req.query.category;
 
+        const category =
+            req.query.category
+                ? String(
+                    req.query.category
+                )
+                    .trim()
+                    .toUpperCase()
+                : null;
+
+        if (
+            category &&
+            !VALID_CATEGORIES.has(
+                category
+            )
+        ) {
+            return sendError(
+                res,
+                400,
+                `Invalid category. Allowed values: ${[
+                    ...VALID_CATEGORIES
+                ].join(", ")}`
+            );
+        }
+
+        try {
             let query = `
                 SELECT
                     log_id,
@@ -281,21 +391,18 @@ app.get(
                     " AND category = ?";
 
                 params.push(
-                    String(category)
-                        .trim()
-                        .toUpperCase()
+                    category
                 );
             }
 
             query +=
                 " ORDER BY log_id DESC";
 
-            const [
-                rows
-            ] = await pool.query(
-                query,
-                params
-            );
+            const [rows] =
+                await pool.query(
+                    query,
+                    params
+                );
 
             res.json({
                 success: true,
@@ -304,13 +411,16 @@ app.get(
             });
 
         } catch (error) {
-            console.error(error);
+            console.error(
+                "Exceptions error:",
+                error
+            );
 
-            res.status(500).json({
-                success: false,
-                error:
-                    "Failed to load exceptions."
-            });
+            sendError(
+                res,
+                500,
+                "Failed to load exceptions."
+            );
         }
     }
 );
@@ -322,79 +432,91 @@ app.get(
 app.get(
     "/api/reconciliation/orders/:orderId",
     async (req, res) => {
-        try {
-            const orderId =
-                req.params.orderId;
 
-            const [
-                orderRows
-            ] = await pool.query(
-                `
-                SELECT
-                    order_id,
-                    customer_name,
-                    amount,
-                    order_date,
-                    status
-                FROM orders
-                WHERE order_id = ?
-                `,
-                [orderId]
+        const orderId =
+            String(
+                req.params.orderId || ""
+            )
+                .trim()
+                .toUpperCase();
+
+        // Validate order ID format
+        if (!isValidOrderId(orderId)) {
+            return sendError(
+                res,
+                400,
+                "Invalid order ID. Expected format: ORD-1005."
             );
+        }
 
+        try {
+            const [orderRows] =
+                await pool.query(
+                    `
+                    SELECT
+                        order_id,
+                        customer_name,
+                        amount,
+                        order_date,
+                        status
+                    FROM orders
+                    WHERE order_id = ?
+                    `,
+                    [orderId]
+                );
+
+            // Valid format but order does not exist
             if (
                 orderRows.length === 0
             ) {
-                return res.status(404).json({
-                    success: false,
-                    error:
-                        "Order not found."
-                });
+                return sendError(
+                    res,
+                    404,
+                    "Order not found."
+                );
             }
 
-            const [
-                settlementRows
-            ] = await pool.query(
-                `
-                SELECT
-                    settlement_id,
-                    payment_id,
-                    order_ref,
-                    gross_amount,
-                    fee,
-                    settled_amount,
-                    settlement_date
-                FROM settlements
-                WHERE order_ref = ?
-                ORDER BY settlement_id
-                `,
-                [orderId]
-            );
+            const [settlementRows] =
+                await pool.query(
+                    `
+                    SELECT
+                        settlement_id,
+                        payment_id,
+                        order_ref,
+                        gross_amount,
+                        fee,
+                        settled_amount,
+                        settlement_date
+                    FROM settlements
+                    WHERE order_ref = ?
+                    ORDER BY settlement_id
+                    `,
+                    [orderId]
+                );
 
-            const [
-                auditRows
-            ] = await pool.query(
-                `
-                SELECT
-                    log_id,
-                    order_id,
-                    payment_id,
-                    utr,
-                    match_status,
-                    match_pass,
-                    confidence,
-                    category,
-                    difference_amount,
-                    raw_reason,
-                    ai_explanation,
-                    suggested_action,
-                    created_at
-                FROM reconciliation_log
-                WHERE order_id = ?
-                ORDER BY log_id DESC
-                `,
-                [orderId]
-            );
+            const [auditRows] =
+                await pool.query(
+                    `
+                    SELECT
+                        log_id,
+                        order_id,
+                        payment_id,
+                        utr,
+                        match_status,
+                        match_pass,
+                        confidence,
+                        category,
+                        difference_amount,
+                        raw_reason,
+                        ai_explanation,
+                        suggested_action,
+                        created_at
+                    FROM reconciliation_log
+                    WHERE order_id = ?
+                    ORDER BY log_id DESC
+                    `,
+                    [orderId]
+                );
 
             res.json({
                 success: true,
@@ -410,13 +532,16 @@ app.get(
             });
 
         } catch (error) {
-            console.error(error);
+            console.error(
+                "Order details error:",
+                error
+            );
 
-            res.status(500).json({
-                success: false,
-                error:
-                    "Failed to load order details."
-            });
+            sendError(
+                res,
+                500,
+                "Failed to load order details."
+            );
         }
     }
 );
@@ -425,37 +550,67 @@ app.get(
 // ROOT
 // ============================================================
 
-app.get("/", (req, res) => {
-    res.json({
-        service:
-            "ReconAI Reconciliation API",
+app.get(
+    "/",
+    (req, res) => {
+        res.json({
+            success: true,
+            service:
+                "ReconAI Reconciliation API",
+            version:
+                "1.0.0",
 
-        version:
-            "1.0.0",
-
-        endpoints: [
-            "GET /api/health",
-            "GET /api/reconciliation/summary",
-            "GET /api/reconciliation/orders",
-            "GET /api/reconciliation/exceptions",
-            "GET /api/reconciliation/orders/:orderId"
-        ]
-    });
-});
+            endpoints: [
+                "GET /api/health",
+                "GET /api/reconciliation/summary",
+                "GET /api/reconciliation/orders",
+                "GET /api/reconciliation/exceptions",
+                "GET /api/reconciliation/orders/:orderId"
+            ]
+        });
+    }
+);
 
 // ============================================================
-// ERROR HANDLER
+// UNKNOWN ROUTE
 // ============================================================
 
 app.use(
-    (err, req, res, next) => {
-        console.error(err);
+    (req, res) => {
+        sendError(
+            res,
+            404,
+            `Route not found: ${req.method} ${req.originalUrl}`
+        );
+    }
+);
 
-        res.status(500).json({
-            success: false,
-            error:
-                "Internal server error."
-        });
+// ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
+app.use(
+    (
+        err,
+        req,
+        res,
+        next
+    ) => {
+
+        console.error(
+            "Unhandled error:",
+            err
+        );
+
+        if (res.headersSent) {
+            return next(err);
+        }
+
+        sendError(
+            res,
+            500,
+            "Internal server error."
+        );
     }
 );
 
@@ -466,6 +621,7 @@ app.use(
 app.listen(
     PORT,
     () => {
+
         console.log(
             "=============================================="
         );
