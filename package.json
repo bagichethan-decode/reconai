@@ -1,29 +1,31 @@
-name: ReconAI Tests
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
+{
+  "name": "reconai",
+  "version": "1.0.0",
+  "description": "Full-stack payment reconciliation platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "node --test tests\\*.test.js"
+  },
+  "keywords": [
+    "payment-reconciliation",
+    "finance",
+    "mysql",
+    "nodejs",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.23.4",
+    "string-similarity": "^4.0.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
