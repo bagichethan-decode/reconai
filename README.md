@@ -59,6 +59,34 @@ Orders / Settlements / Bank Records
                 │
                 ▼
         REST API + Dashboard
+=======
+Orders
+   │
+   ▼
+Payment Settlements
+   │
+   ▼
+Bank Transactions
+   │
+   ▼
+Reconciliation Engine
+   │
+   ├── Exact Matching
+   ├── Fee-Adjusted Matching
+   ├── Fuzzy Matching
+   ├── Amount Validation
+   ├── Settlement Validation
+   └── Bank Verification
+   │
+   ▼
+Exception Classification
+   │
+   ▼
+AI Explanation
+   │
+   ▼
+Finance Dashboard
+      fb8de73 (docs: add load testing results)
 ```
 
 ---
@@ -202,3 +230,23 @@ ReconAI demonstrates practical software engineering through:
 ## License
 
 ISC
+=======
+## Performance Testing
+
+ReconAI was load tested using k6 against the REST API.
+
+Test configuration:
+
+- Maximum virtual users: 50
+- Test duration: 60 seconds
+- Total HTTP requests: 5,464
+- Throughput: 89.91 requests/second
+- Average latency: 7.29 ms
+- p95 latency: 24.37 ms
+- Error rate: 0%
+- Checks passed: 5,464 / 5,464
+
+All configured performance thresholds passed successfully.
+
+---
+ fb8de73 (docs: add load testing results)
