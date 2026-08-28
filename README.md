@@ -246,7 +246,7 @@ Test configuration:
 - Error rate: 0%
 - Checks passed: 5,464 / 5,464
 
-
+All configured performance thresholds passed successfully.
 
 ---
  fb8de73 (docs: add load testing results)
