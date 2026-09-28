@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "test": "node --test tests\\*.test.js"
-  },
+  },.
   "keywords": [
     "payment-reconciliation",
     "finance",
