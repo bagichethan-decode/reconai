@@ -1,6 +1,6 @@
 {
   "name": "reconai",
-  "version": "1.0.0",
+  "version": "1.0.00",
   "description": "Full-stack payment reconciliation platform",
   "main": "index.js",
   "scripts": {
