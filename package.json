@@ -3,8 +3,8 @@
   "version": "1.0.00",
   "description": "Full-stack payment reconciliation platform",
   "main": "index.js",
-  "scripts": {
-    "start": "node backend/server.js",
+  "scripts":{
+    "start": "mode backend/server.js",
     "test": "node --test tests\\*.test.js"
   },.
   "keywords": [
