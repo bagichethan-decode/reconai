@@ -224,7 +224,6 @@ ReconAI demonstrates practical software engineering through:
 - Finance-focused operational workflows
 
 ---
-
 ## License
 
 ISC
@@ -243,7 +242,6 @@ Test configuration:
 - p95 latency: 24.37 ms
 - Error rate: 0%
 - Checks passed: 5,464 / 5,464
-
 All configured performance thresholds passed successfully.
 
 ---
