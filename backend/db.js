@@ -39,5 +39,4 @@ const pool = mysql.createPool({
 
     decimalNumbers: true
 });
-
 module.exports = pool;
