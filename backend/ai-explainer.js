@@ -1,9 +1,7 @@
 /**
  * ReconAI Local Exception Explanation Engine
- *
  * This module provides deterministic explanations and
  * suggested actions for reconciliation exceptions.
- *
  * It does not change reconciliation decisions.
  * The matcher remains the source of truth.
  */
