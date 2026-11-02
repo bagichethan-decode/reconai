@@ -14,7 +14,6 @@ export const options = {
         http_req_duration: ['p(95)<1000']
     }
 };
-
 const BASE_URL = 'http://localhost:3000';
 
 export default function () {
