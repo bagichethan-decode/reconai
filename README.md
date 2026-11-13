@@ -14,6 +14,14 @@ It combines deterministic reconciliation rules, MySQL persistence, REST APIs, AI
 - Fee-adjusted reconciliation
 - Missing settlement and bank entry detection
 - Exception classification with severity and confidence
+- AI-generated explanations and suggested actions
+- Search, filtering, sorting, and pagination
+- Order-level reconciliation details
+- CSV export
+- REST API with input validation and error handling
+- Automated unit and API integration tests
+- GitHub Actions CI
+
 
 ---
 
