@@ -4,7 +4,6 @@ function normalizeReference(value) {
     if (!value) {
         return "";
     }
-
     return String(value)
         .trim()
         .toUpperCase()
