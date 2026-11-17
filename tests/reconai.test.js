@@ -26,14 +26,12 @@ function getSeverity(category) {
     ) {
         return "HIGH";
     }
-
     if (
         normalized === "NO_SETTLEMENT" ||
         normalized === "UNRESOLVED"
     ) {
         return "MEDIUM";
     }
-
     if (normalized === "FUZZY_MATCH") {
         return "LOW";
     }
