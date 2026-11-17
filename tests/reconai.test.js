@@ -103,7 +103,6 @@ test(
         );
     }
 );
-
 test(
     "NO_SETTLEMENT has MEDIUM severity",
     () => {
@@ -115,7 +114,6 @@ test(
         );
     }
 );
-
 test(
     "UNRESOLVED has MEDIUM severity",
     () => {
@@ -127,7 +125,6 @@ test(
         );
     }
 );
-
 test(
     "FUZZY_MATCH has LOW severity",
     () => {
@@ -139,7 +136,6 @@ test(
         );
     }
 );
-
 console.log(
     "ReconAI unit tests loaded."
 );
